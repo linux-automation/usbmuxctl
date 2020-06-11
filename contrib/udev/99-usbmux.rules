@@ -1,0 +1,2 @@
+# USBMUX
+ATTRS{idVendor}=="5824", ATTRS{idProduct}=="27dd", TAG+="uaccess", GROUP="plugdev"
