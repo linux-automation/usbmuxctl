@@ -1,0 +1,11 @@
+Source: usbmuxctl
+Maintainer: Jan Luebbe <jlu@pengutronix.de>
+Section: python
+Priority: extra
+Build-Depends: debhelper (>= 9), dh-python, python3
+Standards-Version: 3.9.5
+
+Package: usbmuxctl
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends}, python3-usb
+Description: Tool to control an usb-mux from the command line

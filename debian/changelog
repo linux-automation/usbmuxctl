@@ -1,0 +1,5 @@
+usbmuxctl (0) unstable; urgency=low
+
+  * initial package
+
+ -- Jan Lübbe <jluebbe@pengutronix.de>  Fri, 12 Jun 2020 11:57:31 +0200

@@ -1,4 +1,12 @@
 __pycache__
 *.egg-info
+/.pybuild
+/debian/.debhelper/
+/debian/files
+/debian/usbmuxctl.debhelper.log
+/debian/usbmuxctl.postinst.debhelper
+/debian/usbmuxctl.prerm.debhelper
+/debian/usbmuxctl.substvars
+/debian/usbmuxctl/
 env/
 venv/
