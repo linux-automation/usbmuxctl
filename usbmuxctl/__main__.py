@@ -20,7 +20,7 @@ def list_usb(args):
 
 def show_status(status):
     print("TODO: Pretty-Print state!")
-    for k,v in status.items():
+    for k,v in sorted(status.items()):
         print("{}: {}".format(k,v))
 
 def find_umux(args):
@@ -56,11 +56,11 @@ def connect(args):
     try:
         mux = find_umux(args)
         links = []
-        if args.Host_DUT:
+        if args.host_dut:
             links.append("DUT-Host")
-        if args.Host_Device:
+        if args.host_device:
             links.append("Device-Host")
-        if args.DUT_Device:
+        if args.dut_device:
             links.append("DUT-Device")
 
         if len(links) == 0:
@@ -154,9 +154,9 @@ def main():
     parser_connect.set_defaults(func=connect)
     connect_group = parser_connect.add_argument_group()
     connect_group.required = True
-    parser_connect.add_argument('--DUT-Device', help='Connect DUT and Device', action='store_true')
-    parser_connect.add_argument('--Host-DUT', help='Connect Host and DUT', action='store_true')
-    parser_connect.add_argument('--Host-Device', help='Connect Host and Device', action='store_true')
+    parser_connect.add_argument('--dut-device', help='Connect DUT and Device', action='store_true')
+    parser_connect.add_argument('--host-dut', help='Connect Host and DUT', action='store_true')
+    parser_connect.add_argument('--host-device', help='Connect Host and Device', action='store_true')
 
     parser_otg = subparsers.add_parser('otg', help='Set the state of the ID-Pin to the DUT')
     parser_otg.set_defaults(func=otg)
