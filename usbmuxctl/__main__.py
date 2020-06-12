@@ -13,8 +13,8 @@ def list_usb(args):
         }
         print(json.dumps(res))
     else:
-        print("USB-Path             | Serial".format("USB-Path"))
-        print("-------------------- | -----")
+        print("Serial               | USB-Path")
+        print("-------------------- | -----------")
         for d in Mux.find_devices():
             print("{:20} | {}".format(d["serial"], d["path"]))
 
