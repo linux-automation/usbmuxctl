@@ -5,7 +5,7 @@ import fastentrypoints
 from setuptools import setup
 
 setup(
-    name="usbmux",
+    name="usbmuxctl",
     version="0.1.0",
     author="Chris Fiege",
     author_email="python@pengutronix.de",
@@ -15,7 +15,7 @@ setup(
     packages=['usbmuxctl'],
     entry_points={
         'console_scripts': [
-            'usbmux = usbmuxctl.__main__:main',
+            'usbmuxctl = usbmuxctl.__main__:main',
         ],
     },
     classifiers=[
