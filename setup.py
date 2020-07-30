@@ -13,6 +13,9 @@ setup(
     url="FIXME",
     description="Tool to control an USB-Mux from the command line",
     packages=['usbmuxctl'],
+    install_requires=[
+        'pyusb'
+    ],
     entry_points={
         'console_scripts': [
             'usbmuxctl = usbmuxctl.__main__:main',
