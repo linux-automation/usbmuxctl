@@ -88,10 +88,22 @@ def list_usb(args):
         }
         print(json.dumps(res))
     else:
-        print("Serial               | USB-Path")
-        print("-------------------- | -----------")
+        print("Serial      | USB-Path           | Host-DUT Lock? | Connections")
+        print("----------- | ------------------ | -------------- | -----------")
         for d in Mux.find_devices():
-            print("{:20} | {}".format(d["serial"], d["path"]))
+            mux = Mux(path=d["path"])
+            status = mux.get_status()
+            if status["data_links"] == "":
+                connections = "None"
+            else:
+                connections = status["data_links"]
+            lock = "locked" if status["dut_power_lockout"] == True else "unlocked"
+            print("{:11} | {:18} | {:14} | {}".format(
+                d["serial"],
+                d["path"],
+                lock,
+                connections
+            ))
 
 def show_status(status, raw=False):
     if raw:
