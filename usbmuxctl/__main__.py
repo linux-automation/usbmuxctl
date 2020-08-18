@@ -4,6 +4,78 @@ import argparse
 from .usbmuxctl import Mux, UmuxNotFound, NoPriviliges
 import json
 
+artwork = {}
+artwork["DUT-Host Device-Host"] = """                                     +-----------------------+
+                                     | USB-Mux               |
+                                  +--|                       |
+                                  |  | SN:   {:11s}     |
+                                  |  | Path: {:16s}|
+                                  |  +-----------------------+
+       VCC: {:1.2f}V    +---------+  |
+Host |>--------------|       1 |--+         ID: {}
+                     |         |           VCC: {:1.2f}V
+                     |       2 |---------------------|> DUT
+                     |         |
+                     |       3 |---------------------|> Device
+                     +---------+           VCC: {:1.2f}V"""
+
+artwork["None"] = """                                     +-----------------------+
+                                     | USB-Mux               |
+                                  +--|                       |
+                                  |  | SN:   {:11s}     |
+                                  |  | Path: {:16s}|
+                                  |  +-----------------------+
+       VCC: {:1.2f}V    +---------+  |
+Host |>--------------|       1 |--+         ID: {}
+                     |         |           VCC: {:1.2f}V
+                     |       2 |----x    ------------|> DUT
+                     |         |
+                     |       3 |----x    ------------|> Device
+                     +---------+           VCC: {:1.2f}V"""
+
+artwork["DUT-Host"] = """                                     +-----------------------+
+                                     | USB-Mux               |
+                                  +--|                       |
+                                  |  | SN:   {:11s}     |
+                                  |  | Path: {:16s}|
+                                  |  +-----------------------+
+       VCC: {:1.2f}V    +---------+  |
+Host |>--------------|       1 |--+         ID: {}
+                     |         |           VCC: {:1.2f}V
+                     |       2 |---------------------|> DUT
+                     |         |
+                     |       3 |----x    ------------|> Device
+                     +---------+           VCC: {:1.2f}V"""
+
+artwork["Device-Host"] = """                                     +-----------------------+
+                                     | USB-Mux               |
+                                  +--|                       |
+                                  |  | SN:   {:11s}     |
+                                  |  | Path: {:16s}|
+                                  |  +-----------------------+
+       VCC: {:1.2f}V    +---------+  |
+Host |>--------------|       1 |--+         ID: {}
+                     |         |           VCC: {:1.2f}V
+                     |       2 |----x    ------------|> DUT
+                     |         |
+                     |       3 |---------------------|> Device
+                     +---------+           VCC: {:1.2f}V"""
+
+
+artwork["DUT-Device"] = """                                     +-----------------------+
+                                     | USB-Mux               |
+                                  +--|                       |
+                                  |  | SN:   {:11s}     |
+                                  |  | Path: {:16s}|
+                                  |  +-----------------------+
+       VCC: {:1.2f}V    +---------+  |
+Host |>--------------|       1 |--+         ID: {}
+                     |         |           VCC: {:1.2f}V
+                     |       2 |----x    +-----------|> DUT
+                     |         |         |
+                     |       3 |----x    +-----------|> Device
+                     +---------+           VCC: {:1.2f}V"""
+
 def list_usb(args):
     if args.json:
         res = {
@@ -18,10 +90,19 @@ def list_usb(args):
         for d in Mux.find_devices():
             print("{:20} | {}".format(d["serial"], d["path"]))
 
-def show_status(status):
-    print("TODO: Pretty-Print state!")
-    for k,v in sorted(status.items()):
-        print("{}: {}".format(k,v))
+def show_status(status, raw=False):
+    if raw:
+        for k,v in sorted(status.items()):
+            print("{}: {}".format(k,v))
+    else:
+        print(artwork[status["data_links"]].format(
+            status["device"]["serial_number"],
+            status["device"]["usb_path"],
+            status["voltage_host"],
+            status["dut_otg_input"],
+            status["voltage_dut"],
+            status["voltage_device"],
+        ))
 
 def find_umux(args):
     mux = Mux(serial_number=args.serial, path=args.path)
@@ -46,7 +127,7 @@ def status(args):
         if result["error"]:
             print("Failed to connect to device: {}".format(result["errormessage"]))
         else:
-            show_status(result["status"])
+            show_status(result["status"], args.raw)
 
 def connect(args):
     result = {
@@ -79,7 +160,7 @@ def connect(args):
         if result["error"]:
             print("Failed to connect to device: {}".format(result["errormessage"]))
         else:
-            show_status(result["status"])
+            show_status(result["status"], args.raw)
 
 def otg(args):
     result = {
@@ -107,7 +188,7 @@ def otg(args):
         if result["error"]:
             print("Failed to connect to device: {}".format(result["errormessage"]))
         else:
-            show_status(result["status"])
+            show_status(result["status"], args.raw)
 
 def dfu(args):
     result = {
@@ -135,10 +216,13 @@ def main():
                        help='Serial number of the USB-Mux')
     parser.add_argument('--path',
                        help='path to the USB-Mux')
-    parser.add_argument('--json',
-                        help="Format output as json",
+    format_parser = parser.add_mutually_exclusive_group()
+    format_parser.add_argument('--json',
+                        help="Format output as json. Useful for scripting.",
                         action="store_true")
-
+    format_parser.add_argument('--raw',
+                               help="Format output as raw info. Useful for command line scripting.",
+                               action="store_true")
 
     subparsers = parser.add_subparsers(help='Supply one of the following commands to interact with the USB-Mux')
     subparsers.required = True
