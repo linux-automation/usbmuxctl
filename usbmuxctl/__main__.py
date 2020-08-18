@@ -4,6 +4,9 @@ import argparse
 from .usbmuxctl import Mux, UmuxNotFound, NoPriviliges
 import json
 
+class ConnectionNotPossible(Exception):
+    pass
+
 artwork = {}
 artwork["DUT-Host Device-Host"] = """                                     +-----------------------+
                                      | USB-Mux               |
@@ -136,9 +139,15 @@ def connect(args):
     }
     try:
         mux = find_umux(args)
+        state = mux.get_status()
         links = []
         if args.host_dut:
             links.append("DUT-Host")
+            if state["dut_power_lockout"] == True:
+                raise ConnectionNotPossible(
+                    "DUT-to-host connection is locked in hardware. "+\
+                    "Refusing to set connection. "+\
+                    "Maybe set 'Lock' switch in the other position?")
         if args.host_device:
             links.append("Device-Host")
         if args.dut_device:
@@ -153,12 +162,15 @@ def connect(args):
     except UmuxNotFound as e:
         result["error"] = True
         result["errormessage"] = "Failed to find the defined USB-Mux"
+    except ConnectionNotPossible as e:
+        result["error"] = True
+        result["errormessage"] = str(e)
 
     if args.json:
         print(json.dumps(result))
     else:
         if result["error"]:
-            print("Failed to connect to device: {}".format(result["errormessage"]))
+            print("Failed to set connection: {}".format(result["errormessage"]))
         else:
             show_status(result["status"], args.raw)
 
