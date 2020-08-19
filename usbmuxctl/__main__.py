@@ -3,6 +3,8 @@
 import argparse
 from .usbmuxctl import Mux, UmuxNotFound, NoPriviliges
 import json
+import sys
+import termcolor
 
 class ConnectionNotPossible(Exception):
     pass
@@ -79,6 +81,14 @@ Host |>--------------|       1 |--+         ID: {}
                      |       3 |----x    +-----------|> Device
                      +---------+           VCC: {:1.2f}V"""
 
+def _error_and_exit(error_message, rc=1):
+    print(
+        termcolor.colored(error_message, "red"),
+        file=sys.stderr,
+    )
+    exit(rc)
+
+
 def list_usb(args):
     if args.json:
         res = {
@@ -141,7 +151,7 @@ def status(args):
         print(json.dumps(result))
     else:
         if result["error"]:
-            print("Failed to connect to device: {}".format(result["errormessage"]))
+            _error_and_exit("Failed to connect to device: {}".format(result["errormessage"]))
         else:
             show_status(result["status"], args.raw)
 
@@ -183,7 +193,7 @@ def connect(args):
         print(json.dumps(result))
     else:
         if result["error"]:
-            print("Failed to set connection: {}".format(result["errormessage"]))
+            _error_and_exit("Failed to set connection: {}".format(result["errormessage"]))
         else:
             show_status(result["status"], args.raw)
 
@@ -211,7 +221,7 @@ def otg(args):
         print(json.dumps(result))
     else:
         if result["error"]:
-            print("Failed to connect to device: {}".format(result["errormessage"]))
+            _error_and_exit("Failed to connect to device: {}".format(result["errormessage"]))
         else:
             show_status(result["status"], args.raw)
 
@@ -231,7 +241,7 @@ def dfu(args):
         print(json.dumps(result))
     else:
         if result["error"]:
-            print("Failed to connect to device: {}".format(result["errormessage"]))
+            _error_and_exit("Failed to connect to device: {}".format(result["errormessage"]))
         else:
             print("OK")
 

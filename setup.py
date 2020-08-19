@@ -14,7 +14,8 @@ setup(
     description="Tool to control an USB-Mux from the command line",
     packages=['usbmuxctl'],
     install_requires=[
-        'pyusb'
+        'pyusb',
+        'termcolor',
     ],
     entry_points={
         'console_scripts': [
