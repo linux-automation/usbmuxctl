@@ -247,7 +247,7 @@ def id(args):
 
 def dfu(args):
     result = {
-        "command": "otg",
+        "command": "dfu",
         "error": False,
     }
     try:
