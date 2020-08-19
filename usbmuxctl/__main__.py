@@ -140,7 +140,7 @@ def show_status(status, raw=False):
             status["device"]["serial_number"],
             status["device"]["usb_path"],
             status["voltage_host"],
-            status["dut_otg_input"],
+            "High" if status["dut_otg_input"] else "Low",
             status["voltage_dut"],
             "LOCKED" if status["dut_power_lockout"] else "     2",
             status["voltage_device"],
