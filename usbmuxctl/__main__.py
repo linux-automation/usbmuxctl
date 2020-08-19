@@ -81,6 +81,18 @@ Host |>--------------|       1 |--+         ID: {}
                      |       3 |----x    +-----------|> Device
                      +---------+           VCC: {:1.2f}V"""
 
+raw_status_annotations={
+    "data_links": "List of active links of USB data lines",
+    "device": "The device this status message is printed for",
+    "dut_otg_input": "Measured level of the OTG pin on the DUT port",
+    "dut_otg_output": "State of the open-drain MOSFET on the OTG pin on the DUT port",
+    "dut_power_lockout": "State of the 'Lock' switch on the USB-Mux",
+    "power_links": "List of active links of USB power lines",
+    "voltage_device": "Measured voltage on the device port",
+    "voltage_dut": "Measured voltage on the DUT port",
+    "voltage_host": "Measured voltage on the host port",
+}
+
 def _error_and_exit(error_message, rc=1):
     print(
         termcolor.colored(error_message, "red"),
@@ -115,10 +127,14 @@ def list_usb(args):
                 connections
             ))
 
+
 def show_status(status, raw=False):
     if raw:
         for k,v in sorted(status.items()):
+            if k in raw_status_annotations:
+                print("# {}".format(raw_status_annotations[k]))
             print("{}: {}".format(k,v))
+            print()
     else:
         print(artwork[status["data_links"]].format(
             status["device"]["serial_number"],
