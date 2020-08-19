@@ -131,7 +131,7 @@ class Mux():
         except usb.core.USBError:
             pass
 
-    def connect(self, links):
+    def connect(self, links, id_pull_low = None):
         num = None
         for key, value in Mux.LINKS.items():
             if value == links:
@@ -141,11 +141,15 @@ class Mux():
 
         self._connect_power(0)
         self._connect_data(0)
+        if not id_pull_low == None:
+            self.pull_otg_id_low(False)
 
         sleep(0.5) # Gives switches time to settle and devices to power off
 
         self._connect_power(num)
         self._connect_data(num)
+        if not id_pull_low == None:
+            self.pull_otg_id_low(id_pull_low)
 
         sleep(0.3) # Wait a little moment for switches to settle
 

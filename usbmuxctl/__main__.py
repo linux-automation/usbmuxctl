@@ -180,6 +180,7 @@ def connect(args):
         mux = find_umux(args)
         state = mux.get_status()
         links = []
+        id_pull_low = False
         if args.host_dut:
             links.append("DUT-Host")
             if state["dut_power_lockout"] == True:
@@ -191,11 +192,14 @@ def connect(args):
             links.append("Device-Host")
         if args.dut_device:
             links.append("DUT-Device")
+            id_pull_low = True
 
         if len(links) == 0:
             links = ["None"]
 
-        mux.connect(" ".join(links))
+        if args.no_id:
+            id_pull_low = None
+        mux.connect(" ".join(links), id_pull_low)
 
         result["status"] = mux.get_status()
     except UmuxNotFound as e:
@@ -213,9 +217,9 @@ def connect(args):
         else:
             show_status(result["status"], args.raw)
 
-def otg(args):
+def id(args):
     result = {
-        "command": "otg",
+        "command": "id",
         "error": False,
     }
     try:
@@ -292,14 +296,20 @@ def main():
     parser_connect.add_argument('--dut-device', help='Connect DUT and Device', action='store_true')
     parser_connect.add_argument('--host-dut', help='Connect Host and DUT', action='store_true')
     parser_connect.add_argument('--host-device', help='Connect Host and Device', action='store_true')
+    parser_connect.add_argument(
+        '--no-id',
+        help="Do not change ID pin if DUT-Port is switched. "+\
+        "Allows to switch the ID pin independed of the oder connections.",
+        action="store_true",
+    )
 
-    parser_otg = subparsers.add_parser('otg', help='Set the state of the ID-Pin to the DUT')
-    parser_otg.set_defaults(func=otg)
+    parser_id = subparsers.add_parser('id', help='Set the state of the ID-Pin to the DUT')
+    parser_id.set_defaults(func=id)
 
-    group_otg = parser_otg.add_mutually_exclusive_group()
-    group_otg.required = True
-    group_otg.add_argument('--float', help='Let the ID-Pin float', action="store_true")
-    group_otg.add_argument('--pull-low', help='Pull the ID-pin low', action="store_true")
+    group_id= parser_id.add_mutually_exclusive_group()
+    group_id.required = True
+    group_id.add_argument('--float', help='Let the ID-Pin float', action="store_true")
+    group_id.add_argument('--pull-low', help='Pull the ID-pin low', action="store_true")
 
     parser_dfu = subparsers.add_parser('dfu', help='Send the USB-Mux into the USB-Bootloader mode.')
     parser_dfu.set_defaults(func=dfu)
