@@ -84,8 +84,8 @@ Host |>--------------|       1 |--+         ID: {}
 raw_status_annotations={
     "data_links": "List of active links of USB data lines",
     "device": "The device this status message is printed for",
-    "dut_otg_input": "Measured level of the OTG pin on the DUT port",
-    "dut_otg_output": "State of the open-drain MOSFET on the OTG pin on the DUT port",
+    "dut_otg_input": "Measured level on the ID pin on the DUT port",
+    "dut_otg_output": "State of the open-drain MOSFET on the ID pin on the DUT port",
     "dut_power_lockout": "State of the 'Lock' switch on the USB-Mux",
     "power_links": "List of active links of USB power lines",
     "voltage_device": "Measured voltage on the device port",
