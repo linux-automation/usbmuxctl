@@ -24,6 +24,7 @@ class Mux():
     _SET_DATA = 2
     _SET_OTG  = 3
     _DFU = 42
+    _SW_VERSION = 254
     _PROTO_VERSION = 255
 
     # Be aware: This is a fake VendorID/Product/ID and not meant for production!
@@ -93,11 +94,14 @@ class Mux():
         except ValueError:
             raise NoPriviliges("Could not communicate with USB-device. Check privileges, maybe add udev-rule")
 
+        # read sw version
+        self.sw_version = str(self._send_cmd(self._SW_VERSION), "utf-8")
+
     def _send_cmd(self, cmd, arg=0):
         """
         Sends a low level USB control transfer to the device.
         """
-        data = self._dev.ctrl_transfer((1<<7) | (2<<5) | 0,     0xff, cmd, arg, 10)
+        data = self._dev.ctrl_transfer((1<<7) | (2<<5) | 0,     0xff, cmd, arg, 128)
         return data
 
     def _parse_return(self, pkg):
@@ -132,6 +136,7 @@ class Mux():
                 "usb_path": path,
                 "serial_number": self._dev.serial_number,
                 "product_name": self._dev.product,
+                "sw_version": self.sw_version,
             },
         }
         return state
