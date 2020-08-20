@@ -10,6 +10,9 @@ class UmuxNotFound(Exception):
 class NoPriviliges(Exception):
     pass
 
+class ProtocollVersionMissmatch(Exception):
+    pass
+
 class Mux():
     """
     This class implements a driver for a USB-Mux device.
@@ -21,7 +24,7 @@ class Mux():
     _SET_DATA = 2
     _SET_OTG  = 3
     _DFU = 42
-    _VERSION = 255
+    _PROTO_VERSION = 255
 
     # Be aware: This is a fake VendorID/Product/ID and not meant for production!
     _VENDOR_ID = 0x5824
@@ -80,8 +83,14 @@ class Mux():
             raise UmuxNotFound()
 
         try:
-            _ = self._dev.product
-        except ValueError as e:
+            # check if we support the protocol version reported by the usbmux
+            proto_version = self._send_cmd(self._PROTO_VERSION)
+            if len(proto_version) != 8:
+                raise ProtocollVersionMissmatch("The protocoll version reported by the USB-Mux is not supported by this control tool.")
+            self._proto_version = "".join([str(x) for x in proto_version])
+            if self._proto_version not in ["00000000"]:
+                raise ProtocollVersionMissmatch("The protocoll version reported by the USB-Mux is not supported by this control tool.")
+        except ValueError:
             raise NoPriviliges("Could not communicate with USB-device. Check privileges, maybe add udev-rule")
 
     def _send_cmd(self, cmd, arg=0):
