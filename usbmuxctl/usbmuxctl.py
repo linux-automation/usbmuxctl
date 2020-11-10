@@ -3,6 +3,12 @@
 import usb.core
 from time import sleep
 
+def path_from_usb_dev(dev):
+    """Takes an pyUSB device as argument and returns a string.
+    The string is a Path representation of the position of the USB device on the USB bus tree."""
+    dev_path = ".".join([str(i) for i in dev.port_numbers])
+    dev_path = "{}-{}".format(dev.bus, dev_path)
+    return dev_path
 
 class UmuxNotFound(Exception):
     pass
@@ -53,8 +59,7 @@ class Mux():
             idProduct=Mux._PRODUCT_ID)
         found = []
         for dev in devices:
-            path = ".".join([str(i) for i in dev.port_numbers])
-            path = "{}-{}".format(dev.bus, path)
+            path = path_from_usb_dev(dev)
             found.append({
                 "serial": dev.serial_number,
                 "path": path,
@@ -74,8 +79,7 @@ class Mux():
             if not serial_number is None:
                 return dev.serial_number == serial_number
             if not path is None:
-                dev_path = ".".join([str(i) for i in dev.port_numbers])
-                dev_path = "{}-{}".format(dev.bus, dev_path)
+                dev_path = path_from_usb_dev(dev)
                 return dev_path == path
             return True
         self._dev = usb.core.find(idVendor=Mux._VENDOR_ID, idProduct=Mux._PRODUCT_ID, custom_match=find_filter)
@@ -264,8 +268,7 @@ class Mux():
         sleep(0.3) # Wait a little moment for switches to settle
 
     def __str__(self):
-        path = ".".join([str(i) for i in self._dev.port_numbers])
-        path = "{}-{}".format(self._dev.bus, path)
+        path = path_from_usb_dev(dev)
         path = "Connected to:\n- ID:   {}\n- Path: {}\n- Name: {}".format(self._dev.serial_number, path, self._dev.product)
         return path
 
