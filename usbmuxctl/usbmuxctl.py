@@ -2,6 +2,7 @@
 
 import usb.core
 from time import sleep
+from .firmware import version
 
 def path_from_usb_dev(dev):
     """Takes an pyUSB device as argument and returns a string.
@@ -100,6 +101,7 @@ class Mux():
 
         # read sw version
         self.sw_version = str(self._send_cmd(self._SW_VERSION), "utf-8")
+        self.sw_version_num = version.version_from_string(self.sw_version)
 
     def _send_cmd(self, cmd, arg=0):
         """
@@ -272,3 +274,23 @@ class Mux():
         path = "Connected to:\n- ID:   {}\n- Path: {}\n- Name: {}".format(self._dev.serial_number, path, self._dev.product)
         return path
 
+    def is_software_up_to_date(self):
+        return version.FIRMWARE_VERSION <= self.sw_version_num
+
+    def update_software(self):
+        """Updates the usbmux software"""
+
+        from .update import (
+            DFU,
+            dfu_util_flash_firmware,
+        )
+        self.enter_dfu()
+        sleep(1)
+
+        usb_path = path_from_usb_dev(self._dev)
+
+        dfu = DFU(path=usb_path)
+
+        dfu_util_flash_firmware(version.FIRMWARE_FILE, dfu.get_path())
+
+        dfu.enter_user_code()

@@ -265,6 +265,32 @@ def dfu(args):
         else:
             print("OK")
 
+def software_update(args):
+    result = {
+        "command": "software_update",
+        "error": False,
+    }
+
+    # Make sure there is a USB-Mux selected
+    if args.serial is None and args.path is None:
+        result["error"] = True
+        result["errormessage"] = "No serial number or path"
+    else:
+        try:
+            mux = find_umux(args)
+            mux.update_software()
+        except UmuxNotFound as e:
+            result["error"] = True
+            result["errormessage"] = "Failed to find the defined USB-Mux"
+
+    if args.json:
+        print(json.dumps(result))
+    else:
+        if result["error"]:
+            _error_and_exit("Failed to connect to device: {}".format(result["errormessage"]))
+        else:
+            print("OK")
+
 def main():
     parser = argparse.ArgumentParser(description='USB-Mux control')
     parser.add_argument('--serial',
@@ -288,6 +314,9 @@ def main():
 
     parser_status = subparsers.add_parser('status', help='Get the status of a USB-Mux')
     parser_status.set_defaults(func=status)
+
+    parser_status = subparsers.add_parser('update', help='Update software on the USB-Mux')
+    parser_status.set_defaults(func=software_update)
 
     parser_connect = subparsers.add_parser('connect', help='Make connections between the ports of the USB-Mux')
     parser_connect.set_defaults(func=connect)

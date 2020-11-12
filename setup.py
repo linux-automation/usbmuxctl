@@ -5,6 +5,7 @@ import fastentrypoints
 from setuptools import setup
 
 setup(
+    include_package_data=True,
     name="usbmuxctl",
     version="0.1.0",
     author="Chris Fiege",
