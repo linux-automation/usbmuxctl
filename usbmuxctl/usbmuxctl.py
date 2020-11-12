@@ -143,6 +143,7 @@ class Mux():
                 "serial_number": self._dev.serial_number,
                 "product_name": self._dev.product,
                 "sw_version": self.sw_version,
+                "sw_up_to_date": self.is_software_up_to_date(),
             },
         }
         return state

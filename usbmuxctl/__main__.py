@@ -120,11 +120,14 @@ def list_usb(args):
             else:
                 connections = status["data_links"]
             lock = "locked" if status["dut_power_lockout"] == True else "unlocked"
-            print("{:11} | {:18} | {:14} | {}".format(
+
+            software_status = "" if mux.is_software_up_to_date() else "Update available"
+            print("{:11} | {:18} | {:14} | {:14} {}".format(
                 d["serial"],
                 d["path"],
                 lock,
-                connections
+                connections,
+                termcolor.colored(software_status, "red", attrs=['reverse']),
             ))
 
 
@@ -145,6 +148,8 @@ def show_status(status, raw=False):
             "LOCKED" if status["dut_power_lockout"] else "     2",
             status["voltage_device"],
         ))
+        if not status["device"]["sw_up_to_date"]:
+            print(termcolor.colored("Software update fot USB-Mux available", "red", attrs=['reverse']))
 
 def find_umux(args):
     mux = Mux(serial_number=args.serial, path=args.path)
