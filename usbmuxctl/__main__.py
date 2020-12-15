@@ -149,7 +149,7 @@ def show_status(status, raw=False):
             status["voltage_device"],
         ))
         if not status["device"]["sw_up_to_date"]:
-            print(termcolor.colored("Software update fot USB-Mux available", "red", attrs=['reverse']))
+            print(termcolor.colored("Software update for USB-Mux available", "red", attrs=['reverse']))
 
 def find_umux(args):
     mux = Mux(serial_number=args.serial, path=args.path)
@@ -333,7 +333,7 @@ def main():
     parser_connect.add_argument(
         '--no-id',
         help="Do not change ID pin if DUT-Port is switched. "+\
-        "Allows to switch the ID pin independed of the oder connections.",
+        "Allows to switch the ID pin independent of the connections.",
         action="store_true",
     )
 

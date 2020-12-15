@@ -6,7 +6,10 @@ from .firmware import version
 
 def path_from_usb_dev(dev):
     """Takes an pyUSB device as argument and returns a string.
-    The string is a Path representation of the position of the USB device on the USB bus tree."""
+    The string is a Path representation of the position of the USB device on the USB bus tree.
+    
+    This path is used to find a USB device on the bus or all devices connected to a HUB.
+    The path is made up of the number of the USB controller followed be the ports of the HUB tree."""
     dev_path = ".".join([str(i) for i in dev.port_numbers])
     dev_path = "{}-{}".format(dev.bus, dev_path)
     return dev_path
@@ -92,10 +95,10 @@ class Mux():
             # check if we support the protocol version reported by the usbmux
             proto_version = self._send_cmd(self._PROTO_VERSION)
             if len(proto_version) != 8:
-                raise ProtocollVersionMissmatch("The protocoll version reported by the USB-Mux is not supported by this control tool.")
+                raise ProtocollVersionMissmatch("The protocol version reported by the USB-Mux is not supported by this control tool.")
             self._proto_version = "".join([str(x) for x in proto_version])
             if self._proto_version not in ["00000000"]:
-                raise ProtocollVersionMissmatch("The protocoll version reported by the USB-Mux is not supported by this control tool.")
+                raise ProtocollVersionMissmatch("The protocol version reported by the USB-Mux is not supported by this control tool.")
         except ValueError:
             raise NoPriviliges("Could not communicate with USB-device. Check privileges, maybe add udev-rule")
 
@@ -117,7 +120,7 @@ class Mux():
         Returns a dict with the available information on the hardware.
         """
         if len(pkg) != 8:
-            raise Exception("Invalied Package length")
+            raise Exception("Invalid Package length")
 
         path = ".".join([str(i) for i in self._dev.port_numbers])
         path = "{}-{}".format(self._dev.bus, path)

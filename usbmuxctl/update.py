@@ -73,8 +73,8 @@ class DFUException(Exception):
         self.status = status
 
 class DFU:
-    """STM32 DFU implementation
-    only to get out of DFU mode"""
+    """STM32 DFU implementation.
+    Only to get out of DFU mode"""
 
     # See RM0091 32.4.1 MCU device ID code
     STM32_DEVICES = {
@@ -94,6 +94,17 @@ class DFU:
 
 
     def __init__(self, path):
+        """Create an DFU instance.
+
+        Can be used to read memory and exit the DFU bootloader.
+
+        Arguments:
+          path -- USB path to the USB device (example: 1-2.2.1)
+
+        Exceptions:
+          NoDFUDeviceFound -- Could not find a device in DFU mode at the path.
+          ToManyDFUDeviceFound -- Found more then one device. Unclear which to choose.
+        """
         def find_filter(dev):
             if not path is None:
                 dev_path = path_from_usb_dev(dev)
@@ -159,107 +170,123 @@ class DFU:
                 data_or_wLength = data)
         return ret
 
-    def get_status(self):
-        """DFU Command
+    def _get_status(self):
+        """DFU internal command
         Get the device status"""
         ret = self._cmd_in(_DFUComand.DFU_GETSTATUS, 0, 6)
         ret = self.parse_dfu_status(ret)
         self.log.debug("get_status: %s", ret)
         return ret
 
-    def check_status(self):
-        """Check the status of the DFU device and raises an DFUException if an error is reported"""
-        status = self.get_status()
+    def _check_status(self):
+        """Wrapper for _get_status.
+        Returns the device status and thows DFUException if bStatus is not OK"""
+        
+        status = self._get_status()
         if status["bStatus"] != _bStatus.OK:
             raise DFUException(status)
         return status
 
-    def clear_status(self):
-        """DFU Command
+    def _clear_status(self):
+        """DFU internal command
         Clears status and possible error states"""
 
         self.log.debug("Clear status")
         ret = self._cmd_out(_DFUComand.DFU_CLRSTATUS, 0)
-        self.check_status()
+        self._check_status()
 
-    def abort(self):
-        """DFU Command
+    def _abort(self):
+        """DFU internal command
         Abort currently running command"""
         self.log.debug("Abort")
         ret = self._cmd_out(_DFUComand.DFU_ABORT, 0)
-        self.check_status()
+        self._check_status()
 
-    def set_address(self, address):
-        """DFU Command
-        Set the address to read,write,execute"""
+    def _set_address(self, address):
+        """DFU internal command
+        Set the address to read, write, execute"""
         self.log.debug("Set Adress: %x", address)
         ret = self._cmd_out(_DFUComand.DFU_DNLOAD, 0, struct.pack("<BI",0x21, address))
-        self.check_status()
+        self._check_status()
 
-    def read_mem(self, length):
-        """DFU Command
+    def _read_mem(self, length):
+        """DFU internal command
         Reads length number of bytes from memory.
-        The adress is set by the set_address() command."""
+        The address is set by the set_address() command."""
         self.log.debug("Reading memory length: %d", length)
 
         ret = self._cmd_in(_DFUComand.DFU_UPLOAD, 2, length)
 
         self.log.debug("Data receving: %s", "".join(["{:02X}".format(i) for i in ret]))
-        return ret, self.check_status()
+        return ret, self._check_status()
 
-    def get_cmd(self):
-        """DFU Command
+    def _get_cmd(self):
+        """DFU internal command
         Requests a list of supportet commands from the DFU device"""
         raise NotImplementedError()
 
-    def write_mem(self):
-        """DFU Command
+    def _write_mem(self):
+        """DFU internal command
         """
         raise NotImplementedError()
 
-    def erease(self):
-        """DFU Command
+    def _erease(self):
+        """DFU internal command
         """
         raise NotImplementedError()
 
-    def read_unprotect(self):
-        """DFU Command
+    def _read_unprotect(self):
+        """DFU internal command
         """
         raise NotImplementedError()
 
 
-    def leave_dfu(self):
-        """DFU Command
+    def _leave_dfu(self):
+        """DFU internal command
         Executes the code at the address set by set_address()"""
         self.log.debug("Leaving DFU mode")
 
         ret = self._cmd_out(_DFUComand.DFU_DNLOAD, 0, b"")
-        status = self.check_status()
+        status = self._check_status()
 
         if status["bState"] != _bState.dfuMANIFEST:
             self.log.error("Leave dfu command faild")
             raise DFUException(status)
 
     def read_at_addr_len(self, addr, length):
-        """Reads length number of bytes from address addr from the device"""
-        try:
-            self.clear_status()
-        except:
-            self.clear_status()
+        """Read data from the DFU device.
+        
+        Arguments:
+            addr   -- address to the first byte to read
+            length -- number of byte to read
 
-        self.abort()
+        This will not work for all addresses and reading might be not allowed by the bootloader.
+        
+        Returns the read data as bytearray."""
+        try:
+            self._clear_status()
+        except:
+            # needs to be done twice to clear the error
+            self._clear_status()
+
+        self._abort()
 
         ## Test
-        self.set_address(addr)
-        self.check_status()
-        self.abort()
-        self.check_status()
-        ret, _ = self.read_mem(length)
+        self._set_address(addr)
+        self._check_status()
+        self._abort()
+        self._check_status()
+        ret, _ = self._read_mem(length)
         
-        self.abort()
+        self._abort()
         return ret
 
     def get_uuid(self):
+        """Returns the UUID of an STM32F0 as bytearray.
+
+        This might not work on some targets as it does a read outside the memory region
+        and the bootloader might not allow this.
+        """
         uuid = self.read_at_addr_len(0x1FFFF7AC, 12)
         uuid = bytearray(uuid)
         
@@ -268,30 +295,43 @@ class DFU:
         return uuid
 
     def enter_user_code(self):
-        """Finds the entry addresse to the user code in flash and executes it"""
+        """Executes the user application in flash.
+        This can be used to exit the DFU bootloader.
+
+        The code reads the entry point from flash and jumps to it.
+        """
         self.log.debug("Entering user code")
 
         try:
-            self.clear_status()
+            self._clear_status()
         except:
-            self.clear_status()
+            # needs to be done twice to clear the error
+            self._clear_status()
 
-        self.abort()
+        self._abort()
 
         ret = self.read_at_addr_len(0x08000000, 8)
         addr = struct.unpack("I", ret[4:8])[0]
         self.log.debug("Code entry address: %x", addr)
 
-        self.abort()
+        self._abort()
 
 
-        self.set_address(addr)
+        self._set_address(addr)
 
-        self.get_status()
+        self._get_status()
 
-        self.leave_dfu()
+        self._leave_dfu()
 
 def dfu_util_flash_firmware(firmware_path, usb_path):
+    """Flash firmware to USB-Mux in DFU mode.
+    This uses the command line tool dfu-util so that must be installed.
+    
+    Arguments:
+    firmware_path -- Path to the firmware file as string
+    usb_path      -- USB path to USB device (example: 1-2.2.1)
+
+    Throws an Exception if dfu-util is not installed oder dfu-util failed"""
     try:
         res = subprocess.run([DFU_UTIL_CMD, 
             "-d", "0483:df11",
@@ -305,11 +345,19 @@ def dfu_util_flash_firmware(firmware_path, usb_path):
         raise Exception("dfu-util not found. Might not be installed.")
 
 def dfu_util_flash_config(file_path, usb_path):
+    """Flash config to USB-Mux in DFU mode.
+    This uses the command line tool dfu-util so that must be installed.
+    
+    Arguments:
+    firmware_path -- Path to the config file as string
+    usb_path      -- USB path to USB device (example: 1-2.2.1)
+    
+    Throws an Exception if dfu-util is not installed oder dfu-util failed"""
     try:
         res = subprocess.run([DFU_UTIL_CMD, 
             "-d", "0483:df11",
             "-a", "0",
-            "-D", firmware_path,
+            "-D", file_path,
             "-s", "0x8007c00",
             "--path", usb_path])
         if res.returncode != 0:
@@ -317,7 +365,7 @@ def dfu_util_flash_config(file_path, usb_path):
     except FileNotFoundError:
         raise Exception("dfu-util not found. Might not be installed.")
 
-def find_dfu_device(search_path):
+def _find_dfu_device(search_path):
     try:
         dfu = DFU(path=search_path)
     except ToManyDFUDeviceFound as e:
@@ -333,8 +381,8 @@ def find_dfu_device(search_path):
 
     return dfu
 
-def flash_firmware(args):
-    dfu = find_dfu_device(args.path)
+def _flash_firmware(args):
+    dfu = _find_dfu_device(args.path)
 
     if args.file is None:
         print("No firmware file specified")
@@ -343,8 +391,8 @@ def flash_firmware(args):
     dfu_util_flash_firmware(args.file, dfu.get_path())
     
 
-def flash_config(args):
-    dfu = find_dfu_device(args.path)
+def _flash_config(args):
+    dfu = _find_dfu_device(args.path)
 
     if args.file is None:
         print("No config file specified")
@@ -352,7 +400,7 @@ def flash_config(args):
 
     dfu_util_flash_config(args.file, dfu.get_path())
 
-def update_firmware(args):
+def _update_firmware(args):
     mux_list = Mux.find_devices()
 
     if args.file is None:
@@ -364,7 +412,7 @@ def update_firmware(args):
         if args.path == mux["path"]:
             selected_mux = mux
             break
-        if args.serial_number == mux["serial"]:
+        if args.serial == mux["serial"]:
             selected_mux = mux
             break
 
@@ -375,23 +423,23 @@ def update_firmware(args):
     mux.enter_dfu()
     sleep(1)
 
-    dfu = find_dfu_device(path)
+    dfu = _find_dfu_device(path)
 
     dfu_util_flash_firmware(args.file, dfu.get_path())
 
     dfu.enter_user_code()
 
-def leave_dfu(args):
-    dfu = find_dfu_device(path)
+def _leave_dfu(args):
+    dfu = _find_dfu_device(args.path)
     dfu.enter_user_code()
 
 if __name__ == "__main__":
 
     commands = {
-            "flash_firmware": flash_firmware,
-            "flash_config": flash_config,
-            "update": update_firmware,
-            "leave_dfu": leave_dfu,
+            "flash_firmware": _flash_firmware,
+            "flash_config": _flash_config,
+            "update": _update_firmware,
+            "leave_dfu": _leave_dfu,
             }
 
     parser = argparse.ArgumentParser("can_isp.py")
