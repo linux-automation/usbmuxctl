@@ -1,0 +1,6 @@
+recursive-include usbmuxctl/ *
+
+global-exclude .*
+global-exclude *~
+global-exclude *.swp
+global-exclude *.pyc

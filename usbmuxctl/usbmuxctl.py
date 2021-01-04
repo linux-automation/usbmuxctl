@@ -2,7 +2,17 @@
 
 import usb.core
 from time import sleep
+from .firmware import version
 
+def path_from_usb_dev(dev):
+    """Takes an pyUSB device as argument and returns a string.
+    The string is a Path representation of the position of the USB device on the USB bus tree.
+
+    This path is used to find a USB device on the bus or all devices connected to a HUB.
+    The path is made up of the number of the USB controller followed be the ports of the HUB tree."""
+    dev_path = ".".join([str(i) for i in dev.port_numbers])
+    dev_path = "{}-{}".format(dev.bus, dev_path)
+    return dev_path
 
 class UmuxNotFound(Exception):
     pass
@@ -53,8 +63,7 @@ class Mux():
             idProduct=Mux._PRODUCT_ID)
         found = []
         for dev in devices:
-            path = ".".join([str(i) for i in dev.port_numbers])
-            path = "{}-{}".format(dev.bus, path)
+            path = path_from_usb_dev(dev)
             found.append({
                 "serial": dev.serial_number,
                 "path": path,
@@ -74,8 +83,7 @@ class Mux():
             if not serial_number is None:
                 return dev.serial_number == serial_number
             if not path is None:
-                dev_path = ".".join([str(i) for i in dev.port_numbers])
-                dev_path = "{}-{}".format(dev.bus, dev_path)
+                dev_path = path_from_usb_dev(dev)
                 return dev_path == path
             return True
         self._dev = usb.core.find(idVendor=Mux._VENDOR_ID, idProduct=Mux._PRODUCT_ID, custom_match=find_filter)
@@ -87,15 +95,16 @@ class Mux():
             # check if we support the protocol version reported by the usbmux
             proto_version = self._send_cmd(self._PROTO_VERSION)
             if len(proto_version) != 8:
-                raise ProtocollVersionMissmatch("The protocoll version reported by the USB-Mux is not supported by this control tool.")
+                raise ProtocollVersionMissmatch("The protocol version reported by the USB-Mux is not supported by this control tool.")
             self._proto_version = "".join([str(x) for x in proto_version])
             if self._proto_version not in ["00000000"]:
-                raise ProtocollVersionMissmatch("The protocoll version reported by the USB-Mux is not supported by this control tool.")
+                raise ProtocollVersionMissmatch("The protocol version reported by the USB-Mux is not supported by this control tool.")
         except ValueError:
             raise NoPriviliges("Could not communicate with USB-device. Check privileges, maybe add udev-rule")
 
         # read sw version
         self.sw_version = str(self._send_cmd(self._SW_VERSION), "utf-8")
+        self.sw_version_num = version.version_from_string(self.sw_version)
 
     def _send_cmd(self, cmd, arg=0):
         """
@@ -111,7 +120,7 @@ class Mux():
         Returns a dict with the available information on the hardware.
         """
         if len(pkg) != 8:
-            raise Exception("Invalied Package length")
+            raise Exception("Invalid Package length")
 
         path = ".".join([str(i) for i in self._dev.port_numbers])
         path = "{}-{}".format(self._dev.bus, path)
@@ -137,6 +146,7 @@ class Mux():
                 "serial_number": self._dev.serial_number,
                 "product_name": self._dev.product,
                 "sw_version": self.sw_version,
+                "sw_up_to_date": self.is_software_up_to_date(),
             },
         }
         return state
@@ -264,8 +274,27 @@ class Mux():
         sleep(0.3) # Wait a little moment for switches to settle
 
     def __str__(self):
-        path = ".".join([str(i) for i in self._dev.port_numbers])
-        path = "{}-{}".format(self._dev.bus, path)
+        path = path_from_usb_dev(dev)
         path = "Connected to:\n- ID:   {}\n- Path: {}\n- Name: {}".format(self._dev.serial_number, path, self._dev.product)
         return path
 
+    def is_software_up_to_date(self):
+        return version.FIRMWARE_VERSION <= self.sw_version_num
+
+    def update_software(self):
+        """Updates the usbmux software"""
+
+        from .update import (
+            DFU,
+            dfu_util_flash_firmware,
+        )
+        self.enter_dfu()
+        sleep(1)
+
+        usb_path = path_from_usb_dev(self._dev)
+
+        dfu = DFU(path=usb_path)
+
+        dfu_util_flash_firmware(version.FIRMWARE_FILE, dfu.get_path())
+
+        dfu.enter_user_code()

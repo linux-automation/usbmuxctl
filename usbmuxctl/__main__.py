@@ -5,6 +5,7 @@ from .usbmuxctl import Mux, UmuxNotFound, NoPriviliges
 import json
 import sys
 import termcolor
+from .update import DfuUtilFailedError, DfuUtilNotFoundError
 
 class ConnectionNotPossible(Exception):
     pass
@@ -120,11 +121,14 @@ def list_usb(args):
             else:
                 connections = status["data_links"]
             lock = "locked" if status["dut_power_lockout"] == True else "unlocked"
-            print("{:11} | {:18} | {:14} | {}".format(
+
+            software_status = "" if mux.is_software_up_to_date() else "Update available"
+            print("{:11} | {:18} | {:14} | {:14} {}".format(
                 d["serial"],
                 d["path"],
                 lock,
-                connections
+                connections,
+                termcolor.colored(software_status, "red", attrs=['reverse']),
             ))
 
 
@@ -145,6 +149,8 @@ def show_status(status, raw=False):
             "LOCKED" if status["dut_power_lockout"] else "     2",
             status["voltage_device"],
         ))
+        if not status["device"]["sw_up_to_date"]:
+            print(termcolor.colored("Software update for USB-Mux available", "red", attrs=['reverse']))
 
 def find_umux(args):
     mux = Mux(serial_number=args.serial, path=args.path)
@@ -265,6 +271,38 @@ def dfu(args):
         else:
             print("OK")
 
+def software_update(args):
+    result = {
+        "command": "software_update",
+        "error": False,
+    }
+
+    # Make sure there is a USB-Mux selected
+    if args.serial is None and args.path is None:
+        result["error"] = True
+        result["errormessage"] = "No serial number or path"
+    else:
+        try:
+            mux = find_umux(args)
+            mux.update_software()
+        except UmuxNotFound as e:
+            result["error"] = True
+            result["errormessage"] = "Failed to connect to device: Failed to find the defined USB-Mux"
+        except DfuUtilNotFoundError:
+            result["error"] = True
+            result["errormessage"] = "Could not find tool 'dfu-util'. Please install using your package manager and re-run this command."
+        except DfuUtilFailedError as e:
+            result["error"] = True
+            result["errormessage"] = "'dfu-util' failed: '{}'. Please check the log above for hints how to fix this.".format(e)
+
+    if args.json:
+        print(json.dumps(result))
+    else:
+        if result["error"]:
+            _error_and_exit(result["errormessage"])
+        else:
+            print("OK")
+
 def main():
     parser = argparse.ArgumentParser(description='USB-Mux control')
     parser.add_argument('--serial',
@@ -289,6 +327,9 @@ def main():
     parser_status = subparsers.add_parser('status', help='Get the status of a USB-Mux')
     parser_status.set_defaults(func=status)
 
+    parser_status = subparsers.add_parser('update', help='Update software on the USB-Mux')
+    parser_status.set_defaults(func=software_update)
+
     parser_connect = subparsers.add_parser('connect', help='Make connections between the ports of the USB-Mux')
     parser_connect.set_defaults(func=connect)
     connect_group = parser_connect.add_argument_group()
@@ -299,7 +340,7 @@ def main():
     parser_connect.add_argument(
         '--no-id',
         help="Do not change ID pin if DUT-Port is switched. "+\
-        "Allows to switch the ID pin independed of the oder connections.",
+        "Allows to switch the ID pin independent of the connections.",
         action="store_true",
     )
 
