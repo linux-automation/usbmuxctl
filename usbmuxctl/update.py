@@ -323,6 +323,12 @@ class DFU:
 
         self._leave_dfu()
 
+class DfuUtilNotFoundError(Exception):
+    pass
+
+class DfuUtilFailedError(Exception):
+    pass
+
 def dfu_util_flash_firmware(firmware_path, usb_path):
     """Flash firmware to USB-Mux in DFU mode.
     This uses the command line tool dfu-util so that must be installed.
@@ -340,9 +346,9 @@ def dfu_util_flash_firmware(firmware_path, usb_path):
             "-s", "0x8000000",
             "--path", usb_path])
         if res.returncode != 0:
-            raise Exception("dfu-util failed with: {}".format(res))
+            raise DfuUtilFailedError("dfu-util failed with: {}".format(res))
     except FileNotFoundError:
-        raise Exception("dfu-util not found. Might not be installed.")
+        raise DfuUtilNotFoundError("dfu-util not found. Might not be installed.")
 
 def dfu_util_flash_config(file_path, usb_path):
     """Flash config to USB-Mux in DFU mode.

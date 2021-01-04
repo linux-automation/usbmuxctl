@@ -5,6 +5,7 @@ from .usbmuxctl import Mux, UmuxNotFound, NoPriviliges
 import json
 import sys
 import termcolor
+from .update import DfuUtilFailedError, DfuUtilNotFoundError
 
 class ConnectionNotPossible(Exception):
     pass
@@ -286,13 +287,19 @@ def software_update(args):
             mux.update_software()
         except UmuxNotFound as e:
             result["error"] = True
-            result["errormessage"] = "Failed to find the defined USB-Mux"
+            result["errormessage"] = "Failed to connect to device: Failed to find the defined USB-Mux"
+        except DfuUtilNotFoundError:
+            result["error"] = True
+            result["errormessage"] = "Could not find tool 'dfu-util'. Please install using your package manager and re-run this command."
+        except DfuUtilFailedError as e:
+            result["error"] = True
+            result["errormessage"] = "'dfu-util' failed: '{}'. Please check the log above for hints how to fix this.".format(e)
 
     if args.json:
         print(json.dumps(result))
     else:
         if result["error"]:
-            _error_and_exit("Failed to connect to device: {}".format(result["errormessage"]))
+            _error_and_exit(result["errormessage"])
         else:
             print("OK")
 
