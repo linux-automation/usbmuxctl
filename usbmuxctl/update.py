@@ -145,7 +145,7 @@ class DFU:
         out["bwPollTimeout"] = bwPollTimeout
         return out
 
-    
+
 
     def get_path(self):
         return path_from_usb_dev(self._dev)
@@ -153,8 +153,8 @@ class DFU:
     def _cmd_out(self, cmd, wValue, data=None, bmRequestType=0x21):
         """Host to device"""
         ret = self._dev.ctrl_transfer(
-                bmRequestType = bmRequestType, 
-                bRequest = cmd.value, 
+                bmRequestType = bmRequestType,
+                bRequest = cmd.value,
                 wValue = wValue,
                 wIndex = self.interface,
                 data_or_wLength = data)
@@ -163,8 +163,8 @@ class DFU:
     def _cmd_in(self, cmd, wValue, data=None, bmRequestType=0xa1):
         """Device to Host"""
         ret = self._dev.ctrl_transfer(
-                bmRequestType = bmRequestType, 
-                bRequest = cmd.value, 
+                bmRequestType = bmRequestType,
+                bRequest = cmd.value,
                 wValue = wValue,
                 wIndex = self.interface,
                 data_or_wLength = data)
@@ -181,7 +181,7 @@ class DFU:
     def _check_status(self):
         """Wrapper for _get_status.
         Returns the device status and thows DFUException if bStatus is not OK"""
-        
+
         status = self._get_status()
         if status["bStatus"] != _bStatus.OK:
             raise DFUException(status)
@@ -255,13 +255,13 @@ class DFU:
 
     def read_at_addr_len(self, addr, length):
         """Read data from the DFU device.
-        
+
         Arguments:
             addr   -- address to the first byte to read
             length -- number of byte to read
 
         This will not work for all addresses and reading might be not allowed by the bootloader.
-        
+
         Returns the read data as bytearray."""
         try:
             self._clear_status()
@@ -277,7 +277,7 @@ class DFU:
         self._abort()
         self._check_status()
         ret, _ = self._read_mem(length)
-        
+
         self._abort()
         return ret
 
@@ -289,7 +289,7 @@ class DFU:
         """
         uuid = self.read_at_addr_len(0x1FFFF7AC, 12)
         uuid = bytearray(uuid)
-        
+
         self.log.debug("Get UUID: %s", uuid.hex())
 
         return uuid
@@ -332,14 +332,14 @@ class DfuUtilFailedError(Exception):
 def dfu_util_flash_firmware(firmware_path, usb_path):
     """Flash firmware to USB-Mux in DFU mode.
     This uses the command line tool dfu-util so that must be installed.
-    
+
     Arguments:
     firmware_path -- Path to the firmware file as string
     usb_path      -- USB path to USB device (example: 1-2.2.1)
 
     Throws an Exception if dfu-util is not installed oder dfu-util failed"""
     try:
-        res = subprocess.run([DFU_UTIL_CMD, 
+        res = subprocess.run([DFU_UTIL_CMD,
             "-d", "0483:df11",
             "-a", "0",
             "-D", firmware_path,
@@ -353,14 +353,14 @@ def dfu_util_flash_firmware(firmware_path, usb_path):
 def dfu_util_flash_config(file_path, usb_path):
     """Flash config to USB-Mux in DFU mode.
     This uses the command line tool dfu-util so that must be installed.
-    
+
     Arguments:
     firmware_path -- Path to the config file as string
     usb_path      -- USB path to USB device (example: 1-2.2.1)
-    
+
     Throws an Exception if dfu-util is not installed oder dfu-util failed"""
     try:
-        res = subprocess.run([DFU_UTIL_CMD, 
+        res = subprocess.run([DFU_UTIL_CMD,
             "-d", "0483:df11",
             "-a", "0",
             "-D", file_path,
@@ -395,7 +395,7 @@ def _flash_firmware(args):
         exit(3)
 
     dfu_util_flash_firmware(args.file, dfu.get_path())
-    
+
 
 def _flash_config(args):
     dfu = _find_dfu_device(args.path)
@@ -477,7 +477,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     commands[args.function](args)
-
-    
 
 

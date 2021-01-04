@@ -7,7 +7,7 @@ from .firmware import version
 def path_from_usb_dev(dev):
     """Takes an pyUSB device as argument and returns a string.
     The string is a Path representation of the position of the USB device on the USB bus tree.
-    
+
     This path is used to find a USB device on the bus or all devices connected to a HUB.
     The path is made up of the number of the USB controller followed be the ports of the HUB tree."""
     dev_path = ".".join([str(i) for i in dev.port_numbers])
