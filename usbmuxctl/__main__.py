@@ -177,6 +177,31 @@ def status(args):
         else:
             show_status(result["status"], args.raw)
 
+def disconnect(args):
+    result = {
+        "command": "disconnect",
+        "error": False,
+    }
+    try:
+        mux = find_umux(args)
+        mux.connect("None")
+
+        result["status"] = mux.get_status()
+    except UmuxNotFound as e:
+        result["error"] = True
+        result["errormessage"] = "Failed to find the defined USB-Mux"
+    except ConnectionNotPossible as e:
+        result["error"] = True
+        result["errormessage"] = str(e)
+
+    if args.json:
+        print(json.dumps(result))
+    else:
+        if result["error"]:
+            _error_and_exit("Failed to set connection: {}".format(result["errormessage"]))
+        else:
+            show_status(result["status"], args.raw)
+
 def connect(args):
     result = {
         "command": "connect",
@@ -329,6 +354,9 @@ def main():
 
     parser_status = subparsers.add_parser('update', help='Update software on the USB-Mux')
     parser_status.set_defaults(func=software_update)
+
+    parser_status = subparsers.add_parser('disconnect', help='Clear all connections between the ports of the USB-Mux')
+    parser_status.set_defaults(func=disconnect)
 
     parser_connect = subparsers.add_parser('connect', help='Make connections between the ports of the USB-Mux')
     parser_connect.set_defaults(func=connect)
