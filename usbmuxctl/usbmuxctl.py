@@ -2,7 +2,9 @@
 
 import usb.core
 from time import sleep
+from sys import stderr
 from .firmware import version
+import errno
 
 def path_from_usb_dev(dev):
     """Takes an pyUSB device as argument and returns a string.
@@ -80,12 +82,30 @@ class Mux():
         If neither is given the first found USB-Mux will be used.
         """
         def find_filter(dev):
+            dev_path = path_from_usb_dev(dev)
+
+            # Perform a dummy-acces on the device to make sure
+            # we actually have permissions to access it, as
+            # otherwise accessing dev.serial_number will result
+            # in an exception being thrown from which the reason
+            # of the error is not immediately obvious.
+            try:
+                dev.get_active_configuration()
+            except usb.core.USBError as e:
+                if e.errno == errno.EACCES:
+                    print("Access denied while checking serial number for device:",
+                          dev_path, file=stderr)
+
+                    return False
+
+                raise e
+
             if not serial_number is None:
                 return dev.serial_number == serial_number
             if not path is None:
-                dev_path = path_from_usb_dev(dev)
                 return dev_path == path
             return True
+
         self._dev = usb.core.find(idVendor=Mux._VENDOR_ID, idProduct=Mux._PRODUCT_ID, custom_match=find_filter)
 
         if self._dev is None:
