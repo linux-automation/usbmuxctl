@@ -184,7 +184,9 @@ def disconnect(args):
     }
     try:
         mux = find_umux(args)
-        mux.connect("None")
+        id_pull_low = None if args.no_id else False
+
+        mux.connect("None", id_pull_low)
 
         result["status"] = mux.get_status()
     except UmuxNotFound as e:
@@ -346,17 +348,21 @@ def main():
     subparsers.required = True
     subparsers.dest = 'command'
 
+    # list subcommand
     parser_list = subparsers.add_parser('list', help='Lists all connected USB-Mux')
     parser_list.set_defaults(func=list_usb)
 
+    # status subcommand
     parser_status = subparsers.add_parser('status', help='Get the status of a USB-Mux')
     parser_status.set_defaults(func=status)
 
-    parser_status = subparsers.add_parser('update', help='Update software on the USB-Mux')
-    parser_status.set_defaults(func=software_update)
+    # update subcommand
+    parser_update = subparsers.add_parser('update', help='Update software on the USB-Mux')
+    parser_update.set_defaults(func=software_update)
 
-    parser_status = subparsers.add_parser('disconnect', help='Clear all connections between the ports of the USB-Mux')
-    parser_status.set_defaults(func=disconnect)
+    # disconnect/connect subcommands and arguments
+    parser_disconnect = subparsers.add_parser('disconnect', help='Clear all connections between the ports of the USB-Mux')
+    parser_disconnect.set_defaults(func=disconnect)
 
     parser_connect = subparsers.add_parser('connect', help='Make connections between the ports of the USB-Mux')
     parser_connect.set_defaults(func=connect)
@@ -365,13 +371,16 @@ def main():
     parser_connect.add_argument('--dut-device', help='Connect DUT and Device', action='store_true')
     parser_connect.add_argument('--host-dut', help='Connect Host and DUT', action='store_true')
     parser_connect.add_argument('--host-device', help='Connect Host and Device', action='store_true')
-    parser_connect.add_argument(
-        '--no-id',
-        help="Do not change ID pin if DUT-Port is switched. "+\
-        "Allows to switch the ID pin independent of the connections.",
-        action="store_true",
-    )
 
+    for subparser in (parser_connect, parser_disconnect):
+        subparser.add_argument(
+            '--no-id',
+            help="Do not change ID pin if DUT-Port is switched. "+\
+            "Allows to switch the ID pin independent of the connections.",
+            action="store_true",
+        )
+
+    # id subcommand and arguments
     parser_id = subparsers.add_parser('id', help='Set the state of the ID-Pin to the DUT')
     parser_id.set_defaults(func=id)
 
@@ -380,6 +389,7 @@ def main():
     group_id.add_argument('--float', help='Let the ID-Pin float', action="store_true")
     group_id.add_argument('--pull-low', help='Pull the ID-pin low', action="store_true")
 
+    # DFU subcommand (enter dfu without acutally performing the flashing)
     parser_dfu = subparsers.add_parser('dfu', help='Send the USB-Mux into the USB-Bootloader mode.')
     parser_dfu.set_defaults(func=dfu)
 
