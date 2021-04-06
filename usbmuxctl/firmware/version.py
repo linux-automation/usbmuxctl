@@ -2,7 +2,7 @@ import os
 
 FIRMWARE_DIR = os.path.dirname(__file__)
 
-FIRMWARE_NAME = "umx-T03_0.1.1.bin"
+FIRMWARE_NAME = "umx-T03_0.1.2.bin"
 
 FIRMWARE_VERSION = list([int(i) for i in FIRMWARE_NAME.rsplit("_", 1)[1].rsplit(".", 1)[0].split(".")])
 
