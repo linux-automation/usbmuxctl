@@ -345,7 +345,12 @@ class Mux():
         from .update import (
             DFU,
             dfu_util_flash_firmware,
+            dfu_util_version,
         )
+
+        # We do not care about the actual version string but want this
+        # to fail early (before we've entered DFU mode) if dfu-util is not installed.
+        _ = dfu_util_version()
         self.enter_dfu()
         sleep(1)
 
