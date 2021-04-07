@@ -57,9 +57,20 @@ class Mux():
     _SW_VERSION = 254
     _PROTO_VERSION = 255
 
-    # Be aware: This is a fake VendorID/Product/ID and not meant for production!
-    _VENDOR_ID = 0x5824
-    _PRODUCT_ID = 0x27dd
+    _USB_IDs = [
+        {
+            # This is our actual Linux Automation GmbH Vendor ID and our actual Product ID.
+            "VENDORID":  0x33f7,
+            "PRODUCTID": 0x0001,
+        },
+        {
+            # This is a _fake_ Vendor-ID and Product-ID that we have choosen by throwing dice during
+            # development. This ID is only the the tansition phase. There should be no USB-Muxes
+            # in the wild using this ID!
+            "VENDORID":  0x5824,
+            "PRODUCTID": 0x27dd,
+        },
+    ]
 
     # ADC calibration data
     ADC_RANGE = (1<<16)-1
@@ -77,17 +88,19 @@ class Mux():
         Returns a list of all found devices:
         [{"serial": <SN>, "path": <UsbPath>}, ...]
         """
-        devices = usb.core.find(
-            find_all=True,
-            idVendor=Mux._VENDOR_ID,
-            idProduct=Mux._PRODUCT_ID)
         found = []
-        for dev in devices:
-            path = path_from_usb_dev(dev)
-            found.append({
-                "serial": dev.serial_number,
-                "path": path,
-            })
+        for ids in Mux._USB_IDs:
+            devices = usb.core.find(
+                find_all=True,
+                idVendor=ids["VENDORID"],
+                idProduct=ids["PRODUCTID"]
+            )
+            for dev in devices:
+                path = path_from_usb_dev(dev)
+                found.append({
+                    "serial": dev.serial_number,
+                    "path": path,
+                })
         return found
 
     def __init__(self, serial_number=None, path=None):
@@ -124,7 +137,14 @@ class Mux():
                 return dev_path == path
             return True
 
-        self._dev = usb.core.find(idVendor=Mux._VENDOR_ID, idProduct=Mux._PRODUCT_ID, custom_match=find_filter)
+        for ids in Mux._USB_IDs:
+            self._dev = usb.core.find(
+                idVendor=ids["VENDORID"],
+                idProduct=ids["PRODUCTID"],
+                custom_match=find_filter,
+            )
+            if self._dev is not None:
+                break
 
         if self._dev is None:
             raise UmuxNotFound()
