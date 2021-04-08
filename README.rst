@@ -48,6 +48,31 @@ Possible example usecases are:
 Quickstart
 ----------
 
+You can install usbmuxctl either directly from git or from pypi:
+
+Install from git
+~~~~~~~~~~~~~~~~
+
+Clone this repository and create a virtualenv for usbmuxctl:
+
+.. code-block:: bash
+
+   $ git clone https://github.com/linux-automation/usbmuxctl.git
+   $ cd usbmuxctl
+   $ virtualenv -p python3 venv
+   $ source venv/bin/activate
+
+Install usbmuxctl into the virtualenv:
+
+.. code-block:: bash
+
+   $ pip install .
+
+You can now continue to test your installation using the help command.
+
+Install from pypi
+~~~~~~~~~~~~~~~~~
+
 Create and activate a virtualenv for usbmuxctl:
 
 .. code-block:: bash
@@ -60,6 +85,9 @@ Install usbmuxctl into the virtualenv:
 .. code-block:: bash
 
    $ pip install usbmuxctl
+
+Test your installation
+~~~~~~~~~~~~~~~~~~~~~~
 
 You can now run ``usbmuxctl -h`` to get a list of available sub-commands:
 
