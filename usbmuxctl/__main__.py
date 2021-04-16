@@ -122,6 +122,38 @@ def _error_and_exit(error_message, rc=1):
     exit(rc)
 
 
+def _ui_messages(status):
+    """
+    Generates a list of messages that should be displayed.
+    """
+
+    messages_list = []
+    if not status["device"]["sw_up_to_date"]:
+        messages_list.append("Software update for USB-Mux available")
+    if status["voltage_host"] < 4.5:
+        messages_list.append(
+            termcolor.colored(
+                "WARN: Host USB voltage is very low ({:0.1f}V)!".format(status["voltage_host"]),
+                "red", attrs=['reverse']
+            )
+        )
+    if status["voltage_host"] > 5.3:
+        messages_list.append(
+            termcolor.colored(
+                "WARN: Host USB voltage is very high ({:0.1f}V)!".format(status["voltage_host"]),
+                "red", attrs=['reverse']
+            )
+        )
+    if status["voltage_dut"] > 5.3:
+        messages_list.append(
+            termcolor.colored(
+                "WARN: DUT USB voltage is very high ({:0.1f}V)!".format(status["voltage_host"]),
+                "red", attrs=['reverse']
+            )
+        )
+    messages = " ".join(messages_list)
+    return messages
+
 def list_usb(args):
     if args.json:
         res = {
@@ -142,13 +174,13 @@ def list_usb(args):
                 connections = status["data_links"]
             lock = "locked" if status["dut_power_lockout"] == True else "unlocked"
 
-            software_status = "" if mux.is_software_up_to_date() else "Update available"
+            messages = _ui_messages(status)
             print("{:11} | {:18} | {:14} | {:14} {}".format(
                 d["serial"],
                 d["path"],
                 lock,
                 connections,
-                termcolor.colored(software_status, "red", attrs=['reverse']),
+                messages,
             ))
 
 
@@ -169,8 +201,8 @@ def show_status(status, raw=False):
             "LOCKED" if status["dut_power_lockout"] else "     2",
             status["voltage_device"],
         ))
-        if not status["device"]["sw_up_to_date"]:
-            print(termcolor.colored("Software update for USB-Mux available", "red", attrs=['reverse']))
+        messages = _ui_messages(status)
+        print(messages)
 
 def find_umux(args):
     mux = Mux(serial_number=args.serial, path=args.path)
