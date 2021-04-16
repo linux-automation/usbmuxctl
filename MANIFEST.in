@@ -1,4 +1,7 @@
 recursive-include usbmuxctl/ *
+include COPYING
+include fastentrypoints.py
+graft contrib
 
 global-exclude .*
 global-exclude *~
