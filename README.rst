@@ -9,15 +9,15 @@ Purpose
 
 This is the control software for the Linux Automation GmbH USB-Mux. This repository contains
 a standalone command line application and a python module, both of which may be used to
-controll USB-Muxes on Linux.
+control USB-Muxes on Linux.
 
 USB-Muxes contain an USB Hub, high speed analog switches, power switches and a microcontroller
-for orchestration. USB-Muxes enable the automated testing of embedded USB devices by
-allowing the connection of different USB devices to a DUT (device under test) without requiring
+for control. USB-Muxes enable the automated testing of embedded USB devices by
+allowing the connection of a USB device to a DUT (device under test) without requiring
 physical access.
 
 The USB-Mux hardware and software is usually used with `Labgrid <https://github.com/labgrid-project/labgrid>`_,
-But can also be made to fit your workflow by using it standalone or in a custom application.
+but can also be made to fit your workflow by using it standalone or in a custom application.
 
 Functional overview
 -------------------
@@ -26,7 +26,7 @@ Functional overview
 
 * ``usbmuxctl list`` - Get a list of available USB-Muxes
 * ``usbmuxctl status`` - Get the current status of a particular USB-Mux
-* ``usbmuxctl update`` - Perform software upgrades
+* ``usbmuxctl update`` - Perform firmware upgrades
 * ``usbmuxctl disconnect`` - Tear down all USB connections to the DUT and Device ports
 * ``usbmuxctl connect`` - Create a connection between USB ports. Possible connections are:
 
@@ -36,7 +36,7 @@ Functional overview
 
 * ``usbmuxctl id`` - Set the status of the DUT's ``id`` pin used for USB OTG negotiation
 
-Possible example usecases are:
+Possible example use cases are:
 
 * Testing the hot-plug reliability by toggling between ``usbmuxctl disconnect``
   and ``usbmuxctl connect --dut-device``.
@@ -48,18 +48,47 @@ Possible example usecases are:
 Quickstart
 ----------
 
-Create and activate a virtualenv for usbmuxctl:
+You can install usbmuxctl either directly from git or from pypi.
+If you just want to give the tool a spin you should use the `pypi`-method.
+
+Install from git
+~~~~~~~~~~~~~~~~
+
+Clone this repository and create a virtualenv for usbmuxctl:
 
 .. code-block:: bash
 
-   $ virtualenv -p python3 venv
+   $ git clone https://github.com/linux-automation/usbmuxctl.git
+   $ cd usbmuxctl
+   $ python3 -m venv venv
    $ source venv/bin/activate
 
 Install usbmuxctl into the virtualenv:
 
 .. code-block:: bash
 
-   $ pip install usbmuxctl
+   $ pip3 install .
+
+You can now continue to test your installation using the help command.
+
+Install from pypi
+~~~~~~~~~~~~~~~~~
+
+Create and activate a virtualenv for usbmuxctl:
+
+.. code-block:: bash
+
+   $ python3 -m venv venv
+   $ source venv/bin/activate
+
+Install usbmuxctl into the virtualenv:
+
+.. code-block:: bash
+
+   $ pip3 install usbmuxctl
+
+Test your installation
+~~~~~~~~~~~~~~~~~~~~~~
 
 You can now run ``usbmuxctl -h`` to get a list of available sub-commands:
 
@@ -97,8 +126,8 @@ USB-connected microcontroller. The section below describes the correct way to
 grant these permissions to your user.
 
 To rule out issues with the configuration of these permissions for the initial test
-you can run ``usbmuxctl`` as root by using ``sudo`` and an absolute path to the
-``usbmuxctl`` file inside the previously set up virtual env [1]_:
+you can run ``usbmuxctl`` as root by using ``sudo`` and a path to the
+``usbmuxctl`` file inside the previously set up virtualenv [1]_:
 
 .. code-block:: text
 

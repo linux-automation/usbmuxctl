@@ -11,7 +11,7 @@ setup(
     author="Chris Fiege",
     author_email="python@pengutronix.de",
     license="LGPL-2.1-or-later",
-    url="FIXME",
+    url="https://github.com/linux-automation/usbmuxctl",
     description="Tool to control an USB-Mux from the command line",
     packages=['usbmuxctl'],
     install_requires=[

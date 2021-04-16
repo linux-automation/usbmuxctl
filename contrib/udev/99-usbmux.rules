@@ -1,2 +1,2 @@
-# USBMUX
-ATTRS{idVendor}=="5824", ATTRS{idProduct}=="27dd", TAG+="uaccess", GROUP="plugdev"
+# Linux Automation GmbH USB-Mux
+ATTRS{idVendor}=="33f7", ATTRS{idProduct}=="0001", TAG+="uaccess", GROUP="plugdev"
