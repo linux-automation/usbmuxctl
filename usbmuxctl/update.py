@@ -349,6 +349,20 @@ class DfuUtilNotFoundError(Exception):
 class DfuUtilFailedError(Exception):
     pass
 
+def dfu_util_version():
+    """
+    Get a dfu-util version string like "dfu-util 0.10" or raise an Exception when dfu-util can not be found
+    """
+
+    try:
+        output = subprocess.check_output([DFU_UTIL_CMD, "-V"])
+        output = output.decode('utf-8') + '\n'
+        dfu_version, *_ = output.split('\n')
+
+        return dfu_version
+    except FileNotFoundError:
+        raise DfuUtilNotFoundError("dfu-util not found. Might not be installed.")
+
 def dfu_util_flash_firmware(firmware_path, usb_path):
     """Flash firmware to USB-Mux in DFU mode.
     This uses the command line tool dfu-util so that must be installed.
@@ -497,5 +511,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     commands[args.function](args)
-
 

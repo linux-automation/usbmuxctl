@@ -19,10 +19,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 import argparse
+import errno
 from .usbmuxctl import Mux, UmuxNotFound, NoPriviliges
 import json
 import sys
 import termcolor
+import usb.core
 from .update import DfuUtilFailedError, DfuUtilNotFoundError
 
 class ConnectionNotPossible(Exception):
@@ -339,6 +341,15 @@ def software_update(args):
         except DfuUtilFailedError as e:
             result["error"] = True
             result["errormessage"] = "'dfu-util' failed: '{}'. Please check the log above for hints how to fix this.".format(e)
+        except usb.core.USBError as err:
+            if err.errno == errno.EACCES:
+                result["error"] = True
+                result["errormessage"] = "'dfu-util' failed. This probably happend because of " +\
+                                        "insufficient permissions: {} ".format(err) +\
+                                        "Disconnect and reconnect the USB-Mux."
+            else:
+                result["error"] = True
+                result["errormessage"] = "Unhandled USBError: {}".format(err)
 
     if args.json:
         print(json.dumps(result))
