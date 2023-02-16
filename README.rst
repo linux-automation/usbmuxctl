@@ -178,6 +178,51 @@ requiring ``sudo`` permissions.
 .. [2] The ``plugdev`` group may not be present in your Linux distribution of choice.
        Please adapt the rule according to the groups provided by your distribution.
 
+Using on Windows
+----------------
+
+Most features of the ``usbmuxctl`` utility can also be used on Windows.
+
+Limitations on Windows
+~~~~~~~~~~~~~~~~~~~~~~
+
+On Windows the following limitations apply:
+
+* Updating the firmware: this feature has not been tested successfully on Windows.
+  (In theory it should be possible to install  ``dfu-util`` and the drivers needed - but it has not yet been
+  documented.)
+* Using the USB path to select an USB-Mux.
+  (On Linux this feature can be used to select which USB-Mux to use by the physical path on the USB.
+  On Windows the path is not exposed by ``libusb`` and thus this field is empty.)
+
+Installation of dependencies
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Install ``python3``.
+Make sure to add the Python binaries to your path during installation.
+
+Afterwards install the `Windows driver package <contrib/windows/libusb_USB-Mux_driver_installer.zip>`_:
+Download and extract the archive. Then run ``InstallDriver.exe``.
+
+Install from pypi
+~~~~~~~~~~~~~~~~~
+
+We suggest to use the PowerShell to use this tool.
+
+Create and activate a virtualenv for usbmuxctl:
+
+.. code-block:: raw
+
+   PS > python -m venv venv
+   PS >.\venv\Scripts\Activate.ps1
+
+Install usbmuxctl into the virtualenv:
+
+.. code-block:: raw
+
+   (venv) PS > pip install usbmuxctl
+
+You can now run ``usbmuxctl.exe -h`` to get a list of available sub-commands.
 
 Contributing
 ------------
