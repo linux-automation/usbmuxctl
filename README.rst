@@ -45,6 +45,8 @@ Possible example use cases are:
 * Testing USB OTG functionality using ``usbmuxctl --dut-device`` (DUT in the USB host role)
   and ``usbmuxctl --host-dut`` (DUT in the USB device role).
 
+Further documentation is available in the `handbook <https://linux-automation.com/umx-M01>`_.
+
 Quickstart
 ----------
 
