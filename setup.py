@@ -13,7 +13,10 @@ setup(
     license="LGPL-2.1-or-later",
     url="https://github.com/linux-automation/usbmuxctl",
     description="Tool to control an USB-Mux from the command line",
-    packages=['usbmuxctl'],
+    packages=[
+        'usbmuxctl',
+        'usbmuxctl.firmware',
+    ],
     install_requires=[
         'pyusb',
         'termcolor',
