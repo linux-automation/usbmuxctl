@@ -30,9 +30,11 @@ def path_from_usb_dev(dev):
 
     This path is used to find a USB device on the bus or all devices connected to a HUB.
     The path is made up of the number of the USB controller followed be the ports of the HUB tree."""
-    dev_path = ".".join([str(i) for i in dev.port_numbers])
-    dev_path = "{}-{}".format(dev.bus, dev_path)
-    return dev_path
+    if dev.port_numbers:
+        dev_path = ".".join([str(i) for i in dev.port_numbers])
+        return "{}-{}".format(dev.bus, dev_path)
+    else:
+        return ""
 
 class UmuxNotFound(Exception):
     pass
@@ -180,8 +182,7 @@ class Mux():
         if len(pkg) != 8:
             raise Exception("Invalid Package length")
 
-        path = ".".join([str(i) for i in self._dev.port_numbers])
-        path = "{}-{}".format(self._dev.bus, path)
+        path = path_from_usb_dev(self._dev)
         state = {
             "voltage_host": \
                 (pkg[0]<<8 | pkg[1]) * Mux.ADC_SCALE / Mux.ADC_RANGE,
