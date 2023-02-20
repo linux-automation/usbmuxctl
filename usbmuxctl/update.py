@@ -18,15 +18,16 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
-import subprocess
-from time import sleep
-from .usbmuxctl import Mux
-from .usbmuxctl import path_from_usb_dev
-import usb.core
-from enum import Enum
-import struct
-import logging
 import argparse
+import logging
+import struct
+import subprocess
+from enum import Enum
+from time import sleep
+
+import usb.core
+
+from .usbmuxctl import Mux, path_from_usb_dev
 
 try:
     import coloredlogs

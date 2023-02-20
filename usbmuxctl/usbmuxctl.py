@@ -18,11 +18,13 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
-import usb.core
-from time import sleep
-from sys import stderr
-from .firmware import version
 import errno
+from sys import stderr
+from time import sleep
+
+import usb.core
+
+from .firmware import version
 
 
 def path_from_usb_dev(dev):
@@ -248,7 +250,7 @@ class Mux:
         Sets the state of the ID pin on the DUT port.
 
         If state is True: Pulls ID pin low
-        If state if False: Leave ID pin floating, a 100k Pull Up is active
+        If state is False: Leave ID pin floating, a 100k Pull Up is active
 
         Returns a dict with the state reported by the hardware.
         """
@@ -272,7 +274,7 @@ class Mux:
 
     def enter_dfu(self):
         """
-        Disconnects all Links and resets the CPU into the DFU-Mude.
+        Disconnects all Links and resets the CPU into the DFU-Mode.
         DFU-Mode is provided by the ROM Code.
         This mode is used to transfer firmware onto the device.
 
@@ -332,7 +334,7 @@ class Mux:
         sleep(0.3)  # Wait a little moment for switches to settle
 
     def __str__(self):
-        path = path_from_usb_dev(dev)
+        path = path_from_usb_dev(self._dev)
         path = "Connected to:\n- ID:   {}\n- Path: {}\n- Name: {}".format(
             self._dev.serial_number, path, self._dev.product
         )

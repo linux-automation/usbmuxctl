@@ -20,12 +20,14 @@
 
 import argparse
 import errno
-from .usbmuxctl import Mux, UmuxNotFound, NoPriviliges
 import json
 import sys
+
 import termcolor
 import usb.core
+
 from .update import DfuUtilFailedError, DfuUtilNotFoundError
+from .usbmuxctl import Mux, UmuxNotFound
 
 
 class ConnectionNotPossible(Exception):
@@ -96,7 +98,6 @@ Host |>--------------|       1 |--+         ID: {}
                      |         |
                      |       3 |---------------------|> Device
                      +---------+           VCC: {:1.2f}V"""
-
 
 artwork[
     "DUT-Device"
@@ -296,8 +297,8 @@ def connect(args):
             if state["dut_power_lockout"] == True:
                 raise ConnectionNotPossible(
                     "DUT-to-host connection is locked in hardware. "
-                    + "Refusing to set connection. "
-                    + "Maybe set 'Lock' switch in the other position?"
+                    "Refusing to set connection. "
+                    "Maybe set 'Lock' switch in the other position?"
                 )
         if args.host_device:
             links.append("Device-Host")
@@ -455,7 +456,8 @@ def main():
 
     # disconnect/connect subcommands and arguments
     parser_disconnect = subparsers.add_parser(
-        "disconnect", help="Clear all connections between the ports of the USB-Mux"
+        "disconnect",
+        help="Clear all connections between the ports of the USB-Mux",
     )
     parser_disconnect.set_defaults(func=disconnect)
 
@@ -471,7 +473,7 @@ def main():
         subparser.add_argument(
             "--no-id",
             help="Do not change ID pin if DUT-Port is switched. "
-            + "Allows to switch the ID pin independent of the connections.",
+            "Allows to switch the ID pin independent of the connections.",
             action="store_true",
         )
 
@@ -484,7 +486,7 @@ def main():
     group_id.add_argument("--float", help="Let the ID-Pin float", action="store_true")
     group_id.add_argument("--pull-low", help="Pull the ID-pin low", action="store_true")
 
-    # DFU subcommand (enter dfu without acutally performing the flashing)
+    # DFU subcommand (enter dfu without actually performing the flashing)
     parser_dfu = subparsers.add_parser("dfu", help="Send the USB-Mux into the USB-Bootloader mode.")
     parser_dfu.set_defaults(func=dfu)
 
