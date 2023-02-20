@@ -43,7 +43,7 @@ DFU_PRODUCT_ID = 0xDF11
 DFU_UTIL_CMD = "dfu-util"
 
 
-class _DFUComand(Enum):
+class _DfuCommand(Enum):
     DFU_DETACH = 0
     DFU_DNLOAD = 1
     DFU_UPLOAD = 2
@@ -90,7 +90,7 @@ class NoDFUDeviceFound(IOError):
     pass
 
 
-class ToManyDFUDeviceFound(IOError):
+class TooManyDFUDevicesFound(IOError):
     def __init__(self, paths):
         self.paths = paths
 
@@ -130,7 +130,7 @@ class DFU:
 
         Exceptions:
           NoDFUDeviceFound -- Could not find a device in DFU mode at the path.
-          ToManyDFUDeviceFound -- Found more then one device. Unclear which to choose.
+          TooManyDFUDevicesFound -- Found more then one device. Unclear which to choose.
         """
 
         def find_filter(dev):
@@ -154,7 +154,7 @@ class DFU:
             for d in dev:
                 path = path_from_usb_dev(d)
                 paths.append(path)
-            raise ToManyDFUDeviceFound(paths)
+            raise TooManyDFUDevicesFound(paths)
 
         self._dev = dev[0]
 
@@ -194,7 +194,7 @@ class DFU:
     def _get_status(self):
         """DFU internal command
         Get the device status"""
-        ret = self._cmd_in(_DFUComand.DFU_GETSTATUS, 0, 6)
+        ret = self._cmd_in(_DfuCommand.DFU_GETSTATUS, 0, 6)
         ret = self.parse_dfu_status(ret)
         self.log.debug("get_status: %s", ret)
         return ret
@@ -213,21 +213,21 @@ class DFU:
         Clears status and possible error states"""
 
         self.log.debug("Clear status")
-        ret = self._cmd_out(_DFUComand.DFU_CLRSTATUS, 0)
+        self._cmd_out(_DfuCommand.DFU_CLRSTATUS, 0)
         self._check_status()
 
     def _abort(self):
         """DFU internal command
         Abort currently running command"""
         self.log.debug("Abort")
-        ret = self._cmd_out(_DFUComand.DFU_ABORT, 0)
+        self._cmd_out(_DfuCommand.DFU_ABORT, 0)
         self._check_status()
 
     def _set_address(self, address):
         """DFU internal command
         Set the address to read, write, execute"""
         self.log.debug("Set Adress: %x", address)
-        ret = self._cmd_out(_DFUComand.DFU_DNLOAD, 0, struct.pack("<BI", 0x21, address))
+        self._cmd_out(_DfuCommand.DFU_DNLOAD, 0, struct.pack("<BI", 0x21, address))
         self._check_status()
 
     def _read_mem(self, length):
@@ -236,7 +236,7 @@ class DFU:
         The address is set by the set_address() command."""
         self.log.debug("Reading memory length: %d", length)
 
-        ret = self._cmd_in(_DFUComand.DFU_UPLOAD, 2, length)
+        ret = self._cmd_in(_DfuCommand.DFU_UPLOAD, 2, length)
 
         self.log.debug("Data receving: %s", "".join(["{:02X}".format(i) for i in ret]))
         return ret, self._check_status()
@@ -250,7 +250,7 @@ class DFU:
         """DFU internal command"""
         raise NotImplementedError()
 
-    def _erease(self):
+    def _erase(self):
         """DFU internal command"""
         raise NotImplementedError()
 
@@ -263,7 +263,7 @@ class DFU:
         Executes the code at the address set by set_address()"""
         self.log.debug("Leaving DFU mode")
 
-        ret = self._cmd_out(_DFUComand.DFU_DNLOAD, 0, b"")
+        self._cmd_out(_DfuCommand.DFU_DNLOAD, 0, b"")
         status = self._check_status()
 
         if status["bState"] != _bState.dfuMANIFEST:
@@ -288,7 +288,7 @@ class DFU:
 
         self._abort()
 
-        ## Test
+        # Test
         self._set_address(addr)
         self._check_status()
         self._abort()
@@ -404,7 +404,7 @@ def dfu_util_flash_config(file_path, usb_path):
 def _find_dfu_device(search_path):
     try:
         dfu = DFU(path=search_path)
-    except ToManyDFUDeviceFound as e:
+    except TooManyDFUDevicesFound as e:
         print("Found more then one DFU Device.")
         print("Please provide a path to the DFU Device you want to use")
         for path in e.paths:

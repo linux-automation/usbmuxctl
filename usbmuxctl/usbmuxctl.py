@@ -44,11 +44,11 @@ class UmuxNotFound(Exception):
     pass
 
 
-class NoPriviliges(Exception):
+class NoPrivileges(Exception):
     pass
 
 
-class ProtocollVersionMissmatch(Exception):
+class ProtocolVersionMismatch(Exception):
     pass
 
 
@@ -74,7 +74,7 @@ class Mux:
         },
         {
             # This is a _fake_ Vendor-ID and Product-ID that we have choosen by throwing dice during
-            # development. This ID is only the the tansition phase. There should be no USB-Muxes
+            # development. This ID is only for the transition phase. There should be no USB-Muxes
             # in the wild using this ID!
             "VENDORID": 0x5824,
             "PRODUCTID": 0x27DD,
@@ -160,16 +160,16 @@ class Mux:
             # check if we support the protocol version reported by the usbmux
             proto_version = self._send_cmd(self._PROTO_VERSION)
             if len(proto_version) != 8:
-                raise ProtocollVersionMissmatch(
+                raise ProtocolVersionMismatch(
                     "The protocol version reported by the USB-Mux is not supported by this control tool."
                 )
             self._proto_version = "".join([str(x) for x in proto_version])
             if self._proto_version not in ["00000000"]:
-                raise ProtocollVersionMissmatch(
+                raise ProtocolVersionMismatch(
                     "The protocol version reported by the USB-Mux is not supported by this control tool."
                 )
         except ValueError:
-            raise NoPriviliges("Could not communicate with USB-device. Check privileges, maybe add udev-rule")
+            raise NoPrivileges("Could not communicate with USB-device. Check privileges, maybe add udev-rule")
 
         # read sw version
         self.sw_version = str(self._send_cmd(self._SW_VERSION), "utf-8")
@@ -220,8 +220,7 @@ class Mux:
         still succeed, but this link will not be set. The state returned
         will reflect this.
 
-        Return the bytefiled received by the USB-Mux.
-        This can be parsed using self._parse_return()
+        Return the parsed status received by the USB-Mux as a dict.
         """
         if 4 <= num <= 0:
             raise Exception("{} is not a valid power connection id".format(num))
@@ -237,8 +236,7 @@ class Mux:
         still succeed, but this link will not be set. The state returned
         will reflect this.
 
-        Return the bytefiled received by the USB-Mux.
-        This can be parsed using self._parse_return()
+        Return the parsed status received by the USB-Mux as a dict.
         """
         if 4 <= num <= 0:
             raise Exception("{} is not a valid data connection id".format(num))
@@ -252,7 +250,7 @@ class Mux:
         If state is True: Pulls ID pin low
         If state is False: Leave ID pin floating, a 100k Pull Up is active
 
-        Returns a dict with the state reported by the hardware.
+        Return the parsed status received by the USB-Mux as a dict.
         """
         if state == True:
             id_state = 1
@@ -267,7 +265,7 @@ class Mux:
         """
         Queries the state of the USB-Mux.
 
-        Returns a dict with the state reported by the hardware.
+        Return the parsed status received by the USB-Mux as a dict.
         """
         data = self._send_cmd(self._GET_STATUS)
         return self._parse_return(data)
