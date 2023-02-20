@@ -241,7 +241,7 @@ def status(args):
         mux = find_umux(args)
         status = mux.get_status()
         result["status"] = status
-    except UmuxNotFound as e:
+    except UmuxNotFound:
         result["error"] = True
         result["errormessage"] = "Failed to find the defined USB-Mux"
 
@@ -266,7 +266,7 @@ def disconnect(args):
         mux.connect("None", id_pull_low)
 
         result["status"] = mux.get_status()
-    except UmuxNotFound as e:
+    except UmuxNotFound:
         result["error"] = True
         result["errormessage"] = "Failed to find the defined USB-Mux"
     except ConnectionNotPossible as e:
@@ -314,7 +314,7 @@ def connect(args):
         mux.connect(" ".join(links), id_pull_low)
 
         result["status"] = mux.get_status()
-    except UmuxNotFound as e:
+    except UmuxNotFound:
         result["error"] = True
         result["errormessage"] = "Failed to find the defined USB-Mux"
     except ConnectionNotPossible as e:
@@ -346,7 +346,7 @@ def id(args):
         mux.pull_otg_id_low(state)
 
         result["status"] = mux.get_status()
-    except UmuxNotFound as e:
+    except UmuxNotFound:
         result["error"] = True
         result["errormessage"] = "Failed to find the defined USB-Mux"
 
@@ -367,7 +367,7 @@ def dfu(args):
     try:
         mux = find_umux(args)
         mux.enter_dfu()
-    except UmuxNotFound as e:
+    except UmuxNotFound:
         result["error"] = True
         result["errormessage"] = "Failed to find the defined USB-Mux"
 
@@ -394,7 +394,7 @@ def software_update(args):
         try:
             mux = find_umux(args)
             mux.update_software()
-        except UmuxNotFound as e:
+        except UmuxNotFound:
             result["error"] = True
             result["errormessage"] = "Failed to connect to device: Failed to find the defined USB-Mux"
         except DfuUtilNotFoundError:
