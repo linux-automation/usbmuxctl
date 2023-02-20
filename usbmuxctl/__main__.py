@@ -338,6 +338,7 @@ def id(args):
     try:
         mux = find_umux(args)
 
+        state = False
         if args.float:
             state = False
         if args.pull_low:
