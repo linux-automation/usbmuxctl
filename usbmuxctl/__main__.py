@@ -190,7 +190,7 @@ def list_usb(args):
                 connections = "None"
             else:
                 connections = status["data_links"]
-            lock = "locked" if status["dut_power_lockout"] == True else "unlocked"
+            lock = "locked" if status["dut_power_lockout"] else "unlocked"
 
             messages = _ui_messages(status)
             print(
@@ -294,7 +294,7 @@ def connect(args):
         id_pull_low = False
         if args.host_dut:
             links.append("DUT-Host")
-            if state["dut_power_lockout"] == True:
+            if state["dut_power_lockout"]:
                 raise ConnectionNotPossible(
                     "DUT-to-host connection is locked in hardware. "
                     "Refusing to set connection. "

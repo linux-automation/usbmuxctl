@@ -138,9 +138,9 @@ class Mux:
 
                 raise e
 
-            if not serial_number is None:
+            if serial_number is not None:
                 return dev.serial_number == serial_number
-            if not path is None:
+            if path is not None:
                 return dev_path == path
             return True
 
@@ -252,13 +252,7 @@ class Mux:
 
         Return the parsed status received by the USB-Mux as a dict.
         """
-        if state == True:
-            id_state = 1
-        elif state == False:
-            id_state = 0
-        else:
-            raise Exception("{} is not a valid data for otg_id".format(state))
-        data = self._send_cmd(self._SET_OTG, id_state)
+        data = self._send_cmd(self._SET_OTG, int(state))
         return self._parse_return(data)
 
     def get_status(self):
@@ -319,14 +313,14 @@ class Mux:
 
         self._connect_power(0)
         self._connect_data(0)
-        if not id_pull_low == None:
+        if id_pull_low is not None:
             self.pull_otg_id_low(False)
 
         sleep(0.5)  # Gives switches time to settle and devices to power off
 
         self._connect_power(num)
         self._connect_data(num)
-        if not id_pull_low == None:
+        if id_pull_low is not None:
             self.pull_otg_id_low(id_pull_low)
 
         sleep(0.3)  # Wait a little moment for switches to settle
