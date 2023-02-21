@@ -147,7 +147,7 @@ def _ui_messages(status):
     if status["voltage_host"] < 4.5:
         messages_list.append(
             termcolor.colored(
-                "WARN: Host USB voltage is very low ({:0.1f}V)!".format(status["voltage_host"]),
+                f"WARN: Host USB voltage is very low ({status['voltage_host']:0.1f}V)!",
                 "red",
                 attrs=["reverse"],
             )
@@ -155,7 +155,7 @@ def _ui_messages(status):
     if status["voltage_host"] > 5.3:
         messages_list.append(
             termcolor.colored(
-                "WARN: Host USB voltage is very high ({:0.1f}V)!".format(status["voltage_host"]),
+                f"WARN: Host USB voltage is very high ({status['voltage_host']:0.1f}V)!",
                 "red",
                 attrs=["reverse"],
             )
@@ -163,7 +163,7 @@ def _ui_messages(status):
     if status["voltage_dut"] > 5.3:
         messages_list.append(
             termcolor.colored(
-                "WARN: DUT USB voltage is very high ({:0.1f}V)!".format(status["voltage_host"]),
+                f"WARN: DUT USB voltage is very high ({status['voltage_dut']:0.1f}V)!",
                 "red",
                 attrs=["reverse"],
             )
@@ -193,23 +193,15 @@ def list_usb(args):
             lock = "locked" if status["dut_power_lockout"] else "unlocked"
 
             messages = _ui_messages(status)
-            print(
-                "{:11} | {:18} | {:14} | {:14} {}".format(
-                    d["serial"],
-                    d["path"],
-                    lock,
-                    connections,
-                    messages,
-                )
-            )
+            print(f"{d['serial']:11} | {d['path']:18} | {lock:14} | {connections:14} {messages}")
 
 
 def show_status(status, raw=False):
     if raw:
         for k, v in sorted(status.items()):
             if k in raw_status_annotations:
-                print("# {}".format(raw_status_annotations[k]))
-            print("{}: {}".format(k, v))
+                print(f"# {raw_status_annotations[k]}")
+            print(f"{k}: {v}")
             print()
     else:
         print(
@@ -249,7 +241,7 @@ def status(args):
         print(json.dumps(result))
     else:
         if result["error"]:
-            _error_and_exit("Failed to connect to device: {}".format(result["errormessage"]))
+            _error_and_exit(f"Failed to connect to device: {result['errormessage']}")
         else:
             show_status(result["status"], args.raw)
 
@@ -277,7 +269,7 @@ def disconnect(args):
         print(json.dumps(result))
     else:
         if result["error"]:
-            _error_and_exit("Failed to set connection: {}".format(result["errormessage"]))
+            _error_and_exit(f"Failed to set connection: {result['errormessage']}")
         else:
             show_status(result["status"], args.raw)
 
@@ -325,7 +317,7 @@ def connect(args):
         print(json.dumps(result))
     else:
         if result["error"]:
-            _error_and_exit("Failed to set connection: {}".format(result["errormessage"]))
+            _error_and_exit(f"Failed to set connection: {result['errormessage']}")
         else:
             show_status(result["status"], args.raw)
 
@@ -355,7 +347,7 @@ def id(args):
         print(json.dumps(result))
     else:
         if result["error"]:
-            _error_and_exit("Failed to connect to device: {}".format(result["errormessage"]))
+            _error_and_exit(f"Failed to connect to device: {result['errormessage']}")
         else:
             show_status(result["status"], args.raw)
 
@@ -376,7 +368,7 @@ def dfu(args):
         print(json.dumps(result))
     else:
         if result["error"]:
-            _error_and_exit("Failed to connect to device: {}".format(result["errormessage"]))
+            _error_and_exit(f"Failed to connect to device: {result['errormessage']}")
         else:
             print("OK")
 
@@ -405,20 +397,18 @@ def software_update(args):
             ] = "Could not find tool 'dfu-util'. Please install using your package manager and re-run this command."
         except DfuUtilFailedError as e:
             result["error"] = True
-            result[
-                "errormessage"
-            ] = "'dfu-util' failed: '{}'. Please check the log above for hints how to fix this.".format(e)
+            result["errormessage"] = f"'dfu-util' failed: '{e}'. Please check the log above for hints how to fix this."
         except usb.core.USBError as err:
             if err.errno == errno.EACCES:
                 result["error"] = True
                 result["errormessage"] = (
                     "'dfu-util' failed. This probably happend because of "
-                    + "insufficient permissions: {} ".format(err)
+                    + f"insufficient permissions: {err} "
                     + "Disconnect and reconnect the USB-Mux."
                 )
             else:
                 result["error"] = True
-                result["errormessage"] = "Unhandled USBError: {}".format(err)
+                result["errormessage"] = f"Unhandled USBError: {err}"
 
     if args.json:
         print(json.dumps(result))

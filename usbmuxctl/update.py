@@ -238,7 +238,7 @@ class DFU:
 
         ret = self._cmd_in(_DfuCommand.DFU_UPLOAD, 2, length)
 
-        self.log.debug("Data receving: %s", "".join(["{:02X}".format(i) for i in ret]))
+        self.log.debug("Data receving: %s", "".join(f"{i:02X}" for i in ret))
         return ret, self._check_status()
 
     def _get_cmd(self):
@@ -377,7 +377,7 @@ def dfu_util_flash_firmware(firmware_path, usb_path):
             [DFU_UTIL_CMD, "-d", "0483:df11", "-a", "0", "-D", firmware_path, "-s", "0x8000000", "--path", usb_path]
         )
         if res.returncode != 0:
-            raise DfuUtilFailedError("dfu-util failed with: {}".format(res))
+            raise DfuUtilFailedError(f"dfu-util failed with: {res}")
     except FileNotFoundError:
         raise DfuUtilNotFoundError("dfu-util not found. Might not be installed.")
 
@@ -396,7 +396,7 @@ def dfu_util_flash_config(file_path, usb_path):
             [DFU_UTIL_CMD, "-d", "0483:df11", "-a", "0", "-D", file_path, "-s", "0x8007c00", "--path", usb_path]
         )
         if res.returncode != 0:
-            raise Exception("dfu-util failed with: {}".format(res))
+            raise Exception(f"dfu-util failed with: {res}")
     except FileNotFoundError:
         raise Exception("dfu-util not found. Might not be installed.")
 
@@ -408,7 +408,7 @@ def _find_dfu_device(search_path):
         print("Found more then one DFU Device.")
         print("Please provide a path to the DFU Device you want to use")
         for path in e.paths:
-            print("  * {}".format(path))
+            print(f"  * {path}")
         exit(1)
 
     except NoDFUDeviceFound:
@@ -454,7 +454,7 @@ def _update_firmware(args):
             selected_mux = mux
             break
 
-    print("Updating USBMux {} @ {}".format(selected_mux["serial"], selected_mux["path"]))
+    print(f"Updating USBMux {selected_mux['serial']} @ {selected_mux['path']}")
 
     path = selected_mux["path"]
     mux = Mux(path=path)

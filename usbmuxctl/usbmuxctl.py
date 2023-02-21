@@ -36,7 +36,7 @@ def path_from_usb_dev(dev):
     The path is made up of the number of the USB controller followed be the ports of the HUB tree."""
     if dev.port_numbers:
         dev_path = ".".join(str(i) for i in dev.port_numbers)
-        return "{}-{}".format(dev.bus, dev_path)
+        return f"{dev.bus}-{dev_path}"
     else:
         return ""
 
@@ -242,7 +242,7 @@ class Mux:
         Return the parsed status received by the USB-Mux as a dict.
         """
         if 4 <= num <= 0:
-            raise Exception("{} is not a valid power connection id".format(num))
+            raise Exception(f"{num} is not a valid power connection id")
         data = self._send_cmd(self._SET_POWER, num)
         return self._parse_return(data)
 
@@ -258,7 +258,7 @@ class Mux:
         Return the parsed status received by the USB-Mux as a dict.
         """
         if 4 <= num <= 0:
-            raise Exception("{} is not a valid data connection id".format(num))
+            raise Exception(f"{num} is not a valid data connection id")
         data = self._send_cmd(self._SET_DATA, num)
         return self._parse_return(data)
 
@@ -328,7 +328,7 @@ class Mux:
             if value == links:
                 num = key
         if num is None:
-            raise Exception("Invalid connection {}".format(links))
+            raise Exception(f"Invalid connection {links}")
 
         self._connect_power(0)
         self._connect_data(0)
@@ -346,9 +346,7 @@ class Mux:
 
     def __str__(self):
         path = path_from_usb_dev(self._dev)
-        path = "Connected to:\n- ID:   {}\n- Path: {}\n- Name: {}".format(
-            self._dev.serial_number, path, self._dev.product
-        )
+        path = f"Connected to:\n- ID:   {self._dev.serial_number}\n- Path: {path}\n- Name: {self._dev.product}"
         return path
 
     def is_software_up_to_date(self):
