@@ -19,6 +19,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 import errno
+import struct
 from sys import stderr
 from time import sleep
 
@@ -28,7 +29,7 @@ from .firmware import version
 
 
 def path_from_usb_dev(dev):
-    """Takes an pyUSB device as argument and returns a string.
+    """Takes a pyUSB device as argument and returns a string.
     The string is a Path representation of the position of the USB device on the USB bus tree.
 
     This path is used to find a USB device on the bus or all devices connected to a HUB.
@@ -81,9 +82,17 @@ class Mux:
         },
     ]
 
-    # ADC calibration data
-    ADC_RANGE = (1 << 16) - 1
-    ADC_SCALE = 3.3 * 3
+    _USB_REQ_TYPE_DIR_HOST_TO_DEVICE = 0x80
+    _USB_REQ_TYPE_TYPE_VENDOR = 0x40
+    _USB_REQ_TYPE_RECIPIENT_DEVICE = 0x00
+
+    _STATUS_FLAG_DUT_LOCK = 0x0100
+    _STATUS_FLAG_OTG_OUT = 0x0200
+    _STATUS_FLAG_OTG_IN = 0x0080
+
+    # _ADC calibration data
+    _ADC_RANGE = (1 << 16) - 1
+    _ADC_SCALE = 3.3 * 3
 
     # Possible Links that can be set by the USB-Mux on power and data links
     # The values of this dict are used for the connect() method.
@@ -179,7 +188,15 @@ class Mux:
         """
         Sends a low level USB control transfer to the device.
         """
-        data = self._dev.ctrl_transfer((1 << 7) | (2 << 5) | 0, 0xFF, cmd, arg, 128)
+        data = self._dev.ctrl_transfer(
+            self._USB_REQ_TYPE_DIR_HOST_TO_DEVICE
+            | self._USB_REQ_TYPE_TYPE_VENDOR
+            | self._USB_REQ_TYPE_RECIPIENT_DEVICE,
+            0xFF,
+            cmd,
+            arg,
+            128,
+        )
         return data
 
     def _parse_return(self, pkg):
@@ -191,16 +208,18 @@ class Mux:
         if len(pkg) != 8:
             raise Exception("Invalid Package length")
 
+        (volt_host_raw, volt_device_raw, volt_dut_raw, flags) = struct.unpack("!HHHH", pkg)
+
         path = path_from_usb_dev(self._dev)
         state = {
-            "voltage_host": (pkg[0] << 8 | pkg[1]) * Mux.ADC_SCALE / Mux.ADC_RANGE,
-            "voltage_device": (pkg[2] << 8 | pkg[3]) * Mux.ADC_SCALE / Mux.ADC_RANGE,
-            "voltage_dut": (pkg[4] << 8 | pkg[5]) * Mux.ADC_SCALE / Mux.ADC_RANGE,
-            "dut_power_lockout": (pkg[6] & 1) != 0,
-            "dut_otg_output": (pkg[6] & 2) != 0,
-            "dut_otg_input": (pkg[7] & 128) != 0,
-            "power_links": Mux._LINKS[(pkg[6] >> 2) & 0b111],
-            "data_links": Mux._LINKS[(pkg[6] >> 5) & 0b111],
+            "voltage_host": volt_host_raw * self._ADC_SCALE / self._ADC_RANGE,
+            "voltage_device": volt_device_raw * self._ADC_SCALE / self._ADC_RANGE,
+            "voltage_dut": volt_dut_raw * self._ADC_SCALE / self._ADC_RANGE,
+            "dut_power_lockout": (flags & self._STATUS_FLAG_DUT_LOCK) != 0,
+            "dut_otg_output": (flags & self._STATUS_FLAG_OTG_OUT) != 0,
+            "dut_otg_input": (flags & self._STATUS_FLAG_OTG_IN) != 0,
+            "power_links": self._LINKS[(flags >> 10) & 0b111],
+            "data_links": self._LINKS[(flags >> 13) & 0b111],
             "device": {
                 "usb_path": path,
                 "serial_number": self._dev.serial_number,
