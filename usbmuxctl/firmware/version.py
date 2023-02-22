@@ -26,6 +26,7 @@ FIRMWARE_VERSION = list([int(i) for i in FIRMWARE_NAME.rsplit("_", 1)[1].rsplit(
 
 FIRMWARE_FILE = os.path.join(FIRMWARE_DIR, FIRMWARE_NAME)
 
+
 def version_from_string(string):
     _, version, _ = string.split(" ", 2)
     version = version.split(".")

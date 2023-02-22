@@ -24,6 +24,7 @@ from sys import stderr
 from .firmware import version
 import errno
 
+
 def path_from_usb_dev(dev):
     """Takes an pyUSB device as argument and returns a string.
     The string is a Path representation of the position of the USB device on the USB bus tree.
@@ -36,16 +37,20 @@ def path_from_usb_dev(dev):
     else:
         return ""
 
+
 class UmuxNotFound(Exception):
     pass
+
 
 class NoPriviliges(Exception):
     pass
 
+
 class ProtocollVersionMissmatch(Exception):
     pass
 
-class Mux():
+
+class Mux:
     """
     This class implements a driver for a USB-Mux device.
     """
@@ -54,7 +59,7 @@ class Mux():
     _GET_STATUS = 0
     _SET_POWER = 1
     _SET_DATA = 2
-    _SET_OTG  = 3
+    _SET_OTG = 3
     _DFU = 42
     _SW_VERSION = 254
     _PROTO_VERSION = 255
@@ -62,21 +67,21 @@ class Mux():
     _USB_IDs = [
         {
             # This is our actual Linux Automation GmbH Vendor ID and our actual Product ID.
-            "VENDORID":  0x33f7,
+            "VENDORID": 0x33F7,
             "PRODUCTID": 0x0001,
         },
         {
             # This is a _fake_ Vendor-ID and Product-ID that we have choosen by throwing dice during
             # development. This ID is only the the tansition phase. There should be no USB-Muxes
             # in the wild using this ID!
-            "VENDORID":  0x5824,
-            "PRODUCTID": 0x27dd,
+            "VENDORID": 0x5824,
+            "PRODUCTID": 0x27DD,
         },
     ]
 
     # ADC calibration data
-    ADC_RANGE = (1<<16)-1
-    ADC_SCALE = 3.3*3
+    ADC_RANGE = (1 << 16) - 1
+    ADC_SCALE = 3.3 * 3
 
     # Possible Links that can be set by the USB-Mux on power and data links
     # The values of this dict are used for the connect() method.
@@ -92,17 +97,15 @@ class Mux():
         """
         found = []
         for ids in Mux._USB_IDs:
-            devices = usb.core.find(
-                find_all=True,
-                idVendor=ids["VENDORID"],
-                idProduct=ids["PRODUCTID"]
-            )
+            devices = usb.core.find(find_all=True, idVendor=ids["VENDORID"], idProduct=ids["PRODUCTID"])
             for dev in devices:
                 path = path_from_usb_dev(dev)
-                found.append({
-                    "serial": dev.serial_number,
-                    "path": path,
-                })
+                found.append(
+                    {
+                        "serial": dev.serial_number,
+                        "path": path,
+                    }
+                )
         return found
 
     def __init__(self, serial_number=None, path=None):
@@ -114,6 +117,7 @@ class Mux():
         If both are given serial_number has priority over path.
         If neither is given the first found USB-Mux will be used.
         """
+
         def find_filter(dev):
             dev_path = path_from_usb_dev(dev)
 
@@ -126,8 +130,7 @@ class Mux():
                 dev.get_active_configuration()
             except usb.core.USBError as e:
                 if e.errno == errno.EACCES:
-                    print("Access denied while checking serial number for device:",
-                          dev_path, file=stderr)
+                    print("Access denied while checking serial number for device:", dev_path, file=stderr)
 
                     return False
 
@@ -155,10 +158,14 @@ class Mux():
             # check if we support the protocol version reported by the usbmux
             proto_version = self._send_cmd(self._PROTO_VERSION)
             if len(proto_version) != 8:
-                raise ProtocollVersionMissmatch("The protocol version reported by the USB-Mux is not supported by this control tool.")
+                raise ProtocollVersionMissmatch(
+                    "The protocol version reported by the USB-Mux is not supported by this control tool."
+                )
             self._proto_version = "".join([str(x) for x in proto_version])
             if self._proto_version not in ["00000000"]:
-                raise ProtocollVersionMissmatch("The protocol version reported by the USB-Mux is not supported by this control tool.")
+                raise ProtocollVersionMissmatch(
+                    "The protocol version reported by the USB-Mux is not supported by this control tool."
+                )
         except ValueError:
             raise NoPriviliges("Could not communicate with USB-device. Check privileges, maybe add udev-rule")
 
@@ -170,7 +177,7 @@ class Mux():
         """
         Sends a low level USB control transfer to the device.
         """
-        data = self._dev.ctrl_transfer((1<<7) | (2<<5) | 0,     0xff, cmd, arg, 128)
+        data = self._dev.ctrl_transfer((1 << 7) | (2 << 5) | 0, 0xFF, cmd, arg, 128)
         return data
 
     def _parse_return(self, pkg):
@@ -184,22 +191,14 @@ class Mux():
 
         path = path_from_usb_dev(self._dev)
         state = {
-            "voltage_host": \
-                (pkg[0]<<8 | pkg[1]) * Mux.ADC_SCALE / Mux.ADC_RANGE,
-            "voltage_device": \
-                (pkg[2]<<8 | pkg[3]) * Mux.ADC_SCALE / Mux.ADC_RANGE,
-            "voltage_dut": \
-                (pkg[4]<<8 | pkg[5]) * Mux.ADC_SCALE / Mux.ADC_RANGE,
-            "dut_power_lockout": \
-                (pkg[6] & 1) != 0,
-            "dut_otg_output": \
-                (pkg[6] & 2) != 0,
-            "dut_otg_input": \
-                (pkg[7] & 128) != 0,
-            "power_links": \
-                Mux._LINKS[ (pkg[6]>>2)&0b111 ],
-            "data_links": \
-                Mux._LINKS[ (pkg[6]>>5)&0b111 ],
+            "voltage_host": (pkg[0] << 8 | pkg[1]) * Mux.ADC_SCALE / Mux.ADC_RANGE,
+            "voltage_device": (pkg[2] << 8 | pkg[3]) * Mux.ADC_SCALE / Mux.ADC_RANGE,
+            "voltage_dut": (pkg[4] << 8 | pkg[5]) * Mux.ADC_SCALE / Mux.ADC_RANGE,
+            "dut_power_lockout": (pkg[6] & 1) != 0,
+            "dut_otg_output": (pkg[6] & 2) != 0,
+            "dut_otg_input": (pkg[7] & 128) != 0,
+            "power_links": Mux._LINKS[(pkg[6] >> 2) & 0b111],
+            "data_links": Mux._LINKS[(pkg[6] >> 5) & 0b111],
             "device": {
                 "usb_path": path,
                 "serial_number": self._dev.serial_number,
@@ -289,7 +288,7 @@ class Mux():
         except usb.core.USBError:
             pass
 
-    def connect(self, links, id_pull_low = None):
+    def connect(self, links, id_pull_low=None):
         """
         Applies a connection between ports of the USB-Mux.
 
@@ -323,18 +322,20 @@ class Mux():
         if not id_pull_low == None:
             self.pull_otg_id_low(False)
 
-        sleep(0.5) # Gives switches time to settle and devices to power off
+        sleep(0.5)  # Gives switches time to settle and devices to power off
 
         self._connect_power(num)
         self._connect_data(num)
         if not id_pull_low == None:
             self.pull_otg_id_low(id_pull_low)
 
-        sleep(0.3) # Wait a little moment for switches to settle
+        sleep(0.3)  # Wait a little moment for switches to settle
 
     def __str__(self):
         path = path_from_usb_dev(dev)
-        path = "Connected to:\n- ID:   {}\n- Path: {}\n- Name: {}".format(self._dev.serial_number, path, self._dev.product)
+        path = "Connected to:\n- ID:   {}\n- Path: {}\n- Name: {}".format(
+            self._dev.serial_number, path, self._dev.product
+        )
         return path
 
     def is_software_up_to_date(self):

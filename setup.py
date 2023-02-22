@@ -14,19 +14,17 @@ setup(
     url="https://github.com/linux-automation/usbmuxctl",
     description="Tool to control an USB-Mux from the command line",
     packages=[
-        'usbmuxctl',
-        'usbmuxctl.firmware',
+        "usbmuxctl",
+        "usbmuxctl.firmware",
     ],
     install_requires=[
-        'pyusb',
-        'termcolor',
+        "pyusb",
+        "termcolor",
     ],
     entry_points={
-        'console_scripts': [
-            'usbmuxctl = usbmuxctl.__main__:main',
+        "console_scripts": [
+            "usbmuxctl = usbmuxctl.__main__:main",
         ],
     },
-    classifiers=[
-        "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)"
-    ]
+    classifiers=["License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)"],
 )
