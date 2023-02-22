@@ -34,7 +34,7 @@ def path_from_usb_dev(dev):
     This path is used to find a USB device on the bus or all devices connected to a HUB.
     The path is made up of the number of the USB controller followed be the ports of the HUB tree."""
     if dev.port_numbers:
-        dev_path = ".".join([str(i) for i in dev.port_numbers])
+        dev_path = ".".join(str(i) for i in dev.port_numbers)
         return "{}-{}".format(dev.bus, dev_path)
     else:
         return ""
@@ -163,7 +163,7 @@ class Mux:
                 raise ProtocolVersionMismatch(
                     "The protocol version reported by the USB-Mux is not supported by this control tool."
                 )
-            self._proto_version = "".join([str(x) for x in proto_version])
+            self._proto_version = "".join(str(x) for x in proto_version)
             if self._proto_version not in ["00000000"]:
                 raise ProtocolVersionMismatch(
                     "The protocol version reported by the USB-Mux is not supported by this control tool."
