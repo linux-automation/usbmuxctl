@@ -7,7 +7,7 @@ from setuptools import setup
 setup(
     include_package_data=True,
     name="usbmuxctl",
-    version="0.1.0",
+    version="0.1.3",
     author="Chris Fiege",
     author_email="python@pengutronix.de",
     license="LGPL-2.1-or-later",
