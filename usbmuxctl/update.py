@@ -134,7 +134,7 @@ class DFU:
         """
 
         def find_filter(dev):
-            if not path is None:
+            if path is not None:
                 dev_path = path_from_usb_dev(dev)
                 return dev_path == path
             return True
