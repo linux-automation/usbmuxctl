@@ -242,7 +242,7 @@ def status(args):
     else:
         if result["error"]:
             _error_and_exit(f"Failed to connect to device: {result['errormessage']}")
-        else:
+        elif not args.quiet:
             show_status(result["status"], args.raw)
 
 
@@ -270,7 +270,7 @@ def disconnect(args):
     else:
         if result["error"]:
             _error_and_exit(f"Failed to set connection: {result['errormessage']}")
-        else:
+        elif not args.quiet:
             show_status(result["status"], args.raw)
 
 
@@ -318,7 +318,7 @@ def connect(args):
     else:
         if result["error"]:
             _error_and_exit(f"Failed to set connection: {result['errormessage']}")
-        else:
+        elif not args.quiet:
             show_status(result["status"], args.raw)
 
 
@@ -345,7 +345,7 @@ def id(args):
 
     if args.json:
         print(json.dumps(result))
-    else:
+    elif not args.quiet:
         if result["error"]:
             _error_and_exit(f"Failed to connect to device: {result['errormessage']}")
         else:
@@ -369,7 +369,7 @@ def dfu(args):
     else:
         if result["error"]:
             _error_and_exit(f"Failed to connect to device: {result['errormessage']}")
-        else:
+        elif not args.quiet:
             print("OK")
 
 
@@ -415,7 +415,7 @@ def software_update(args):
     else:
         if result["error"]:
             _error_and_exit(result["errormessage"])
-        else:
+        elif not args.quiet:
             print("OK")
 
 
@@ -428,6 +428,7 @@ def main():
     format_parser.add_argument(
         "--raw", help="Format output as raw info. Useful for command line scripting.", action="store_true"
     )
+    format_parser.add_argument("--quiet", "-q", help="Make the tool less verbose.", action="store_true")
 
     subparsers = parser.add_subparsers(help="Supply one of the following commands to interact with the USB-Mux")
     subparsers.required = True
