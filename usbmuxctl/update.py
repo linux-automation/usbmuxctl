@@ -33,7 +33,7 @@ try:
     import coloredlogs
 
     coloredlogs.install()
-except:
+except ModuleNotFoundError:
     pass
 
 # Vendor/product ID for STM32 DFU bootloader
@@ -282,7 +282,7 @@ class DFU:
         Returns the read data as bytearray."""
         try:
             self._clear_status()
-        except:
+        except:  # noqa
             # needs to be done twice to clear the error
             self._clear_status()
 
@@ -321,7 +321,7 @@ class DFU:
 
         try:
             self._clear_status()
-        except:
+        except:  # noqa
             # needs to be done twice to clear the error
             self._clear_status()
 
