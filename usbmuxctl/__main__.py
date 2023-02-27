@@ -20,18 +20,24 @@
 
 import argparse
 import errno
-from .usbmuxctl import Mux, UmuxNotFound, NoPriviliges
 import json
 import sys
+
 import termcolor
 import usb.core
+
 from .update import DfuUtilFailedError, DfuUtilNotFoundError
+from .usbmuxctl import Mux, UmuxNotFound
+
 
 class ConnectionNotPossible(Exception):
     pass
 
+
 artwork = {}
-artwork["DUT-Host Device-Host"] = """                                     +-----------------------+
+artwork[
+    "DUT-Host Device-Host"
+] = """                                     +-----------------------+
                                      | USB-Mux               |
                                   +--|                       |
                                   |  | SN:   {:11s}     |
@@ -45,7 +51,9 @@ Host |>--------------|       1 |--+         ID: {}
                      |       3 |---------------------|> Device
                      +---------+           VCC: {:1.2f}V"""
 
-artwork["None"] = """                                     +-----------------------+
+artwork[
+    "None"
+] = """                                     +-----------------------+
                                      | USB-Mux               |
                                   +--|                       |
                                   |  | SN:   {:11s}     |
@@ -59,7 +67,9 @@ Host |>--------------|       1 |--+         ID: {}
                      |       3 |----x    ------------|> Device
                      +---------+           VCC: {:1.2f}V"""
 
-artwork["DUT-Host"] = """                                     +-----------------------+
+artwork[
+    "DUT-Host"
+] = """                                     +-----------------------+
                                      | USB-Mux               |
                                   +--|                       |
                                   |  | SN:   {:11s}     |
@@ -73,7 +83,9 @@ Host |>--------------|       1 |--+         ID: {}
                      |       3 |----x    ------------|> Device
                      +---------+           VCC: {:1.2f}V"""
 
-artwork["Device-Host"] = """                                     +-----------------------+
+artwork[
+    "Device-Host"
+] = """                                     +-----------------------+
                                      | USB-Mux               |
                                   +--|                       |
                                   |  | SN:   {:11s}     |
@@ -87,8 +99,9 @@ Host |>--------------|       1 |--+         ID: {}
                      |       3 |---------------------|> Device
                      +---------+           VCC: {:1.2f}V"""
 
-
-artwork["DUT-Device"] = """                                     +-----------------------+
+artwork[
+    "DUT-Device"
+] = """                                     +-----------------------+
                                      | USB-Mux               |
                                   +--|                       |
                                   |  | SN:   {:11s}     |
@@ -102,7 +115,7 @@ Host |>--------------|       1 |--+         ID: {}
                      |       3 |----x    +-----------|> Device
                      +---------+           VCC: {:1.2f}V"""
 
-raw_status_annotations={
+raw_status_annotations = {
     "data_links": "List of active links of USB data lines",
     "device": "The device this status message is printed for",
     "dut_otg_input": "Measured level on the ID pin on the DUT port",
@@ -113,6 +126,7 @@ raw_status_annotations={
     "voltage_dut": "Measured voltage on the DUT port",
     "voltage_host": "Measured voltage on the host port",
 }
+
 
 def _error_and_exit(error_message, rc=1):
     print(
@@ -133,26 +147,30 @@ def _ui_messages(status):
     if status["voltage_host"] < 4.5:
         messages_list.append(
             termcolor.colored(
-                "WARN: Host USB voltage is very low ({:0.1f}V)!".format(status["voltage_host"]),
-                "red", attrs=['reverse']
+                f"WARN: Host USB voltage is very low ({status['voltage_host']:0.1f}V)!",
+                "red",
+                attrs=["reverse"],
             )
         )
     if status["voltage_host"] > 5.3:
         messages_list.append(
             termcolor.colored(
-                "WARN: Host USB voltage is very high ({:0.1f}V)!".format(status["voltage_host"]),
-                "red", attrs=['reverse']
+                f"WARN: Host USB voltage is very high ({status['voltage_host']:0.1f}V)!",
+                "red",
+                attrs=["reverse"],
             )
         )
     if status["voltage_dut"] > 5.3:
         messages_list.append(
             termcolor.colored(
-                "WARN: DUT USB voltage is very high ({:0.1f}V)!".format(status["voltage_host"]),
-                "red", attrs=['reverse']
+                f"WARN: DUT USB voltage is very high ({status['voltage_dut']:0.1f}V)!",
+                "red",
+                attrs=["reverse"],
             )
         )
     messages = " ".join(messages_list)
     return messages
+
 
 def list_usb(args):
     if args.json:
@@ -172,41 +190,39 @@ def list_usb(args):
                 connections = "None"
             else:
                 connections = status["data_links"]
-            lock = "locked" if status["dut_power_lockout"] == True else "unlocked"
+            lock = "locked" if status["dut_power_lockout"] else "unlocked"
 
             messages = _ui_messages(status)
-            print("{:11} | {:18} | {:14} | {:14} {}".format(
-                d["serial"],
-                d["path"],
-                lock,
-                connections,
-                messages,
-            ))
+            print(f"{d['serial']:11} | {d['path']:18} | {lock:14} | {connections:14} {messages}")
 
 
 def show_status(status, raw=False):
     if raw:
-        for k,v in sorted(status.items()):
+        for k, v in sorted(status.items()):
             if k in raw_status_annotations:
-                print("# {}".format(raw_status_annotations[k]))
-            print("{}: {}".format(k,v))
+                print(f"# {raw_status_annotations[k]}")
+            print(f"{k}: {v}")
             print()
     else:
-        print(artwork[status["data_links"]].format(
-            status["device"]["serial_number"],
-            status["device"]["usb_path"],
-            status["voltage_host"],
-            "High" if status["dut_otg_input"] else "Low",
-            status["voltage_dut"],
-            "LOCKED" if status["dut_power_lockout"] else "     2",
-            status["voltage_device"],
-        ))
+        print(
+            artwork[status["data_links"]].format(
+                status["device"]["serial_number"],
+                status["device"]["usb_path"],
+                status["voltage_host"],
+                "High" if status["dut_otg_input"] else "Low",
+                status["voltage_dut"],
+                "LOCKED" if status["dut_power_lockout"] else "     2",
+                status["voltage_device"],
+            )
+        )
         messages = _ui_messages(status)
         print(messages)
+
 
 def find_umux(args):
     mux = Mux(serial_number=args.serial, path=args.path)
     return mux
+
 
 def status(args):
     result = {
@@ -217,7 +233,7 @@ def status(args):
         mux = find_umux(args)
         status = mux.get_status()
         result["status"] = status
-    except UmuxNotFound as e:
+    except UmuxNotFound:
         result["error"] = True
         result["errormessage"] = "Failed to find the defined USB-Mux"
 
@@ -225,9 +241,10 @@ def status(args):
         print(json.dumps(result))
     else:
         if result["error"]:
-            _error_and_exit("Failed to connect to device: {}".format(result["errormessage"]))
+            _error_and_exit(f"Failed to connect to device: {result['errormessage']}")
         else:
             show_status(result["status"], args.raw)
+
 
 def disconnect(args):
     result = {
@@ -241,7 +258,7 @@ def disconnect(args):
         mux.connect("None", id_pull_low)
 
         result["status"] = mux.get_status()
-    except UmuxNotFound as e:
+    except UmuxNotFound:
         result["error"] = True
         result["errormessage"] = "Failed to find the defined USB-Mux"
     except ConnectionNotPossible as e:
@@ -252,9 +269,10 @@ def disconnect(args):
         print(json.dumps(result))
     else:
         if result["error"]:
-            _error_and_exit("Failed to set connection: {}".format(result["errormessage"]))
+            _error_and_exit(f"Failed to set connection: {result['errormessage']}")
         else:
             show_status(result["status"], args.raw)
+
 
 def connect(args):
     result = {
@@ -268,11 +286,12 @@ def connect(args):
         id_pull_low = False
         if args.host_dut:
             links.append("DUT-Host")
-            if state["dut_power_lockout"] == True:
+            if state["dut_power_lockout"]:
                 raise ConnectionNotPossible(
-                    "DUT-to-host connection is locked in hardware. "+\
-                    "Refusing to set connection. "+\
-                    "Maybe set 'Lock' switch in the other position?")
+                    "DUT-to-host connection is locked in hardware. "
+                    "Refusing to set connection. "
+                    "Maybe set 'Lock' switch in the other position?"
+                )
         if args.host_device:
             links.append("Device-Host")
         if args.dut_device:
@@ -287,7 +306,7 @@ def connect(args):
         mux.connect(" ".join(links), id_pull_low)
 
         result["status"] = mux.get_status()
-    except UmuxNotFound as e:
+    except UmuxNotFound:
         result["error"] = True
         result["errormessage"] = "Failed to find the defined USB-Mux"
     except ConnectionNotPossible as e:
@@ -298,9 +317,10 @@ def connect(args):
         print(json.dumps(result))
     else:
         if result["error"]:
-            _error_and_exit("Failed to set connection: {}".format(result["errormessage"]))
+            _error_and_exit(f"Failed to set connection: {result['errormessage']}")
         else:
             show_status(result["status"], args.raw)
+
 
 def id(args):
     result = {
@@ -310,6 +330,7 @@ def id(args):
     try:
         mux = find_umux(args)
 
+        state = False
         if args.float:
             state = False
         if args.pull_low:
@@ -318,7 +339,7 @@ def id(args):
         mux.pull_otg_id_low(state)
 
         result["status"] = mux.get_status()
-    except UmuxNotFound as e:
+    except UmuxNotFound:
         result["error"] = True
         result["errormessage"] = "Failed to find the defined USB-Mux"
 
@@ -326,9 +347,10 @@ def id(args):
         print(json.dumps(result))
     else:
         if result["error"]:
-            _error_and_exit("Failed to connect to device: {}".format(result["errormessage"]))
+            _error_and_exit(f"Failed to connect to device: {result['errormessage']}")
         else:
             show_status(result["status"], args.raw)
+
 
 def dfu(args):
     result = {
@@ -338,7 +360,7 @@ def dfu(args):
     try:
         mux = find_umux(args)
         mux.enter_dfu()
-    except UmuxNotFound as e:
+    except UmuxNotFound:
         result["error"] = True
         result["errormessage"] = "Failed to find the defined USB-Mux"
 
@@ -346,9 +368,10 @@ def dfu(args):
         print(json.dumps(result))
     else:
         if result["error"]:
-            _error_and_exit("Failed to connect to device: {}".format(result["errormessage"]))
+            _error_and_exit(f"Failed to connect to device: {result['errormessage']}")
         else:
             print("OK")
+
 
 def software_update(args):
     result = {
@@ -364,24 +387,28 @@ def software_update(args):
         try:
             mux = find_umux(args)
             mux.update_software()
-        except UmuxNotFound as e:
+        except UmuxNotFound:
             result["error"] = True
             result["errormessage"] = "Failed to connect to device: Failed to find the defined USB-Mux"
         except DfuUtilNotFoundError:
             result["error"] = True
-            result["errormessage"] = "Could not find tool 'dfu-util'. Please install using your package manager and re-run this command."
+            result[
+                "errormessage"
+            ] = "Could not find tool 'dfu-util'. Please install using your package manager and re-run this command."
         except DfuUtilFailedError as e:
             result["error"] = True
-            result["errormessage"] = "'dfu-util' failed: '{}'. Please check the log above for hints how to fix this.".format(e)
+            result["errormessage"] = f"'dfu-util' failed: '{e}'. Please check the log above for hints how to fix this."
         except usb.core.USBError as err:
             if err.errno == errno.EACCES:
                 result["error"] = True
-                result["errormessage"] = "'dfu-util' failed. This probably happend because of " +\
-                                        "insufficient permissions: {} ".format(err) +\
-                                        "Disconnect and reconnect the USB-Mux."
+                result["errormessage"] = (
+                    "'dfu-util' failed. This probably happend because of "
+                    + f"insufficient permissions: {err} "
+                    + "Disconnect and reconnect the USB-Mux."
+                )
             else:
                 result["error"] = True
-                result["errormessage"] = "Unhandled USBError: {}".format(err)
+                result["errormessage"] = f"Unhandled USBError: {err}"
 
     if args.json:
         print(json.dumps(result))
@@ -391,71 +418,72 @@ def software_update(args):
         else:
             print("OK")
 
-def main():
-    parser = argparse.ArgumentParser(description='USB-Mux control')
-    parser.add_argument('--serial',
-                       help='Serial number of the USB-Mux')
-    parser.add_argument('--path',
-                       help='path to the USB-Mux')
-    format_parser = parser.add_mutually_exclusive_group()
-    format_parser.add_argument('--json',
-                        help="Format output as json. Useful for scripting.",
-                        action="store_true")
-    format_parser.add_argument('--raw',
-                               help="Format output as raw info. Useful for command line scripting.",
-                               action="store_true")
 
-    subparsers = parser.add_subparsers(help='Supply one of the following commands to interact with the USB-Mux')
+def main():
+    parser = argparse.ArgumentParser(description="USB-Mux control")
+    parser.add_argument("--serial", help="Serial number of the USB-Mux")
+    parser.add_argument("--path", help="path to the USB-Mux")
+    format_parser = parser.add_mutually_exclusive_group()
+    format_parser.add_argument("--json", help="Format output as json. Useful for scripting.", action="store_true")
+    format_parser.add_argument(
+        "--raw", help="Format output as raw info. Useful for command line scripting.", action="store_true"
+    )
+
+    subparsers = parser.add_subparsers(help="Supply one of the following commands to interact with the USB-Mux")
     subparsers.required = True
-    subparsers.dest = 'command'
+    subparsers.dest = "command"
 
     # list subcommand
-    parser_list = subparsers.add_parser('list', help='Lists all connected USB-Mux')
+    parser_list = subparsers.add_parser("list", help="Lists all connected USB-Mux")
     parser_list.set_defaults(func=list_usb)
 
     # status subcommand
-    parser_status = subparsers.add_parser('status', help='Get the status of a USB-Mux')
+    parser_status = subparsers.add_parser("status", help="Get the status of a USB-Mux")
     parser_status.set_defaults(func=status)
 
     # update subcommand
-    parser_update = subparsers.add_parser('update', help='Update software on the USB-Mux')
+    parser_update = subparsers.add_parser("update", help="Update software on the USB-Mux")
     parser_update.set_defaults(func=software_update)
 
     # disconnect/connect subcommands and arguments
-    parser_disconnect = subparsers.add_parser('disconnect', help='Clear all connections between the ports of the USB-Mux')
+    parser_disconnect = subparsers.add_parser(
+        "disconnect",
+        help="Clear all connections between the ports of the USB-Mux",
+    )
     parser_disconnect.set_defaults(func=disconnect)
 
-    parser_connect = subparsers.add_parser('connect', help='Make connections between the ports of the USB-Mux')
+    parser_connect = subparsers.add_parser("connect", help="Make connections between the ports of the USB-Mux")
     parser_connect.set_defaults(func=connect)
     connect_group = parser_connect.add_argument_group()
     connect_group.required = True
-    parser_connect.add_argument('--dut-device', help='Connect DUT and Device', action='store_true')
-    parser_connect.add_argument('--host-dut', help='Connect Host and DUT', action='store_true')
-    parser_connect.add_argument('--host-device', help='Connect Host and Device', action='store_true')
+    parser_connect.add_argument("--dut-device", help="Connect DUT and Device", action="store_true")
+    parser_connect.add_argument("--host-dut", help="Connect Host and DUT", action="store_true")
+    parser_connect.add_argument("--host-device", help="Connect Host and Device", action="store_true")
 
     for subparser in (parser_connect, parser_disconnect):
         subparser.add_argument(
-            '--no-id',
-            help="Do not change ID pin if DUT-Port is switched. "+\
+            "--no-id",
+            help="Do not change ID pin if DUT-Port is switched. "
             "Allows to switch the ID pin independent of the connections.",
             action="store_true",
         )
 
     # id subcommand and arguments
-    parser_id = subparsers.add_parser('id', help='Set the state of the ID-Pin to the DUT')
+    parser_id = subparsers.add_parser("id", help="Set the state of the ID-Pin to the DUT")
     parser_id.set_defaults(func=id)
 
-    group_id= parser_id.add_mutually_exclusive_group()
+    group_id = parser_id.add_mutually_exclusive_group()
     group_id.required = True
-    group_id.add_argument('--float', help='Let the ID-Pin float', action="store_true")
-    group_id.add_argument('--pull-low', help='Pull the ID-pin low', action="store_true")
+    group_id.add_argument("--float", help="Let the ID-Pin float", action="store_true")
+    group_id.add_argument("--pull-low", help="Pull the ID-pin low", action="store_true")
 
-    # DFU subcommand (enter dfu without acutally performing the flashing)
-    parser_dfu = subparsers.add_parser('dfu', help='Send the USB-Mux into the USB-Bootloader mode.')
+    # DFU subcommand (enter dfu without actually performing the flashing)
+    parser_dfu = subparsers.add_parser("dfu", help="Send the USB-Mux into the USB-Bootloader mode.")
     parser_dfu.set_defaults(func=dfu)
 
     args = parser.parse_args()
     args.func(args)
+
 
 if __name__ == "__main__":
     main()

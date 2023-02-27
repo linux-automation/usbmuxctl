@@ -233,6 +233,16 @@ Thank you for considering a contribution to this project!
 Changes should be submitted via a
 `Github pull request <https://github.com/linux-automation/usbmuxctl/pulls>`_.
 
+We use the `black <https://black.readthedocs.io/en/stable/>`_ code formatter,
+please run `black` when contributing changes:
+
+.. code-block:: bash
+
+    $ python3 -m pip install black
+    $ black *.py usbmuxctl/
+    All done! ✨ 🍰 ✨
+    8 files left unchanged.
+
 This project uses the `Developer's Certificate of Origin 1.1
 <https://developercertificate.org/>`_ with the same `process
 <https://www.kernel.org/doc/html/latest/process/submitting-patches.html#sign-your-work-the-developer-s-certificate-of-origin>`_

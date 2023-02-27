@@ -18,34 +18,42 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
-import usb.core
-from time import sleep
-from sys import stderr
-from .firmware import version
 import errno
+import struct
+from sys import stderr
+from time import sleep
+
+import usb.core
+
+from .firmware import version
+
 
 def path_from_usb_dev(dev):
-    """Takes an pyUSB device as argument and returns a string.
+    """Takes a pyUSB device as argument and returns a string.
     The string is a Path representation of the position of the USB device on the USB bus tree.
 
     This path is used to find a USB device on the bus or all devices connected to a HUB.
     The path is made up of the number of the USB controller followed be the ports of the HUB tree."""
     if dev.port_numbers:
-        dev_path = ".".join([str(i) for i in dev.port_numbers])
-        return "{}-{}".format(dev.bus, dev_path)
+        dev_path = ".".join(str(i) for i in dev.port_numbers)
+        return f"{dev.bus}-{dev_path}"
     else:
         return ""
+
 
 class UmuxNotFound(Exception):
     pass
 
-class NoPriviliges(Exception):
+
+class NoPrivileges(Exception):
     pass
 
-class ProtocollVersionMissmatch(Exception):
+
+class ProtocolVersionMismatch(Exception):
     pass
 
-class Mux():
+
+class Mux:
     """
     This class implements a driver for a USB-Mux device.
     """
@@ -54,7 +62,7 @@ class Mux():
     _GET_STATUS = 0
     _SET_POWER = 1
     _SET_DATA = 2
-    _SET_OTG  = 3
+    _SET_OTG = 3
     _DFU = 42
     _SW_VERSION = 254
     _PROTO_VERSION = 255
@@ -62,21 +70,29 @@ class Mux():
     _USB_IDs = [
         {
             # This is our actual Linux Automation GmbH Vendor ID and our actual Product ID.
-            "VENDORID":  0x33f7,
+            "VENDORID": 0x33F7,
             "PRODUCTID": 0x0001,
         },
         {
             # This is a _fake_ Vendor-ID and Product-ID that we have choosen by throwing dice during
-            # development. This ID is only the the tansition phase. There should be no USB-Muxes
+            # development. This ID is only for the transition phase. There should be no USB-Muxes
             # in the wild using this ID!
-            "VENDORID":  0x5824,
-            "PRODUCTID": 0x27dd,
+            "VENDORID": 0x5824,
+            "PRODUCTID": 0x27DD,
         },
     ]
 
-    # ADC calibration data
-    ADC_RANGE = (1<<16)-1
-    ADC_SCALE = 3.3*3
+    _USB_REQ_TYPE_DIR_HOST_TO_DEVICE = 0x80
+    _USB_REQ_TYPE_TYPE_VENDOR = 0x40
+    _USB_REQ_TYPE_RECIPIENT_DEVICE = 0x00
+
+    _STATUS_FLAG_DUT_LOCK = 0x0100
+    _STATUS_FLAG_OTG_OUT = 0x0200
+    _STATUS_FLAG_OTG_IN = 0x0080
+
+    # _ADC calibration data
+    _ADC_RANGE = (1 << 16) - 1
+    _ADC_SCALE = 3.3 * 3
 
     # Possible Links that can be set by the USB-Mux on power and data links
     # The values of this dict are used for the connect() method.
@@ -92,17 +108,15 @@ class Mux():
         """
         found = []
         for ids in Mux._USB_IDs:
-            devices = usb.core.find(
-                find_all=True,
-                idVendor=ids["VENDORID"],
-                idProduct=ids["PRODUCTID"]
-            )
+            devices = usb.core.find(find_all=True, idVendor=ids["VENDORID"], idProduct=ids["PRODUCTID"])
             for dev in devices:
                 path = path_from_usb_dev(dev)
-                found.append({
-                    "serial": dev.serial_number,
-                    "path": path,
-                })
+                found.append(
+                    {
+                        "serial": dev.serial_number,
+                        "path": path,
+                    }
+                )
         return found
 
     def __init__(self, serial_number=None, path=None):
@@ -114,6 +128,7 @@ class Mux():
         If both are given serial_number has priority over path.
         If neither is given the first found USB-Mux will be used.
         """
+
         def find_filter(dev):
             dev_path = path_from_usb_dev(dev)
 
@@ -126,16 +141,15 @@ class Mux():
                 dev.get_active_configuration()
             except usb.core.USBError as e:
                 if e.errno == errno.EACCES:
-                    print("Access denied while checking serial number for device:",
-                          dev_path, file=stderr)
+                    print("Access denied while checking serial number for device:", dev_path, file=stderr)
 
                     return False
 
                 raise e
 
-            if not serial_number is None:
+            if serial_number is not None:
                 return dev.serial_number == serial_number
-            if not path is None:
+            if path is not None:
                 return dev_path == path
             return True
 
@@ -155,12 +169,16 @@ class Mux():
             # check if we support the protocol version reported by the usbmux
             proto_version = self._send_cmd(self._PROTO_VERSION)
             if len(proto_version) != 8:
-                raise ProtocollVersionMissmatch("The protocol version reported by the USB-Mux is not supported by this control tool.")
-            self._proto_version = "".join([str(x) for x in proto_version])
+                raise ProtocolVersionMismatch(
+                    "The protocol version reported by the USB-Mux is not supported by this control tool."
+                )
+            self._proto_version = "".join(str(x) for x in proto_version)
             if self._proto_version not in ["00000000"]:
-                raise ProtocollVersionMissmatch("The protocol version reported by the USB-Mux is not supported by this control tool.")
+                raise ProtocolVersionMismatch(
+                    "The protocol version reported by the USB-Mux is not supported by this control tool."
+                )
         except ValueError:
-            raise NoPriviliges("Could not communicate with USB-device. Check privileges, maybe add udev-rule")
+            raise NoPrivileges("Could not communicate with USB-device. Check privileges, maybe add udev-rule")
 
         # read sw version
         self.sw_version = str(self._send_cmd(self._SW_VERSION), "utf-8")
@@ -170,7 +188,15 @@ class Mux():
         """
         Sends a low level USB control transfer to the device.
         """
-        data = self._dev.ctrl_transfer((1<<7) | (2<<5) | 0,     0xff, cmd, arg, 128)
+        data = self._dev.ctrl_transfer(
+            self._USB_REQ_TYPE_DIR_HOST_TO_DEVICE
+            | self._USB_REQ_TYPE_TYPE_VENDOR
+            | self._USB_REQ_TYPE_RECIPIENT_DEVICE,
+            0xFF,
+            cmd,
+            arg,
+            128,
+        )
         return data
 
     def _parse_return(self, pkg):
@@ -182,24 +208,18 @@ class Mux():
         if len(pkg) != 8:
             raise Exception("Invalid Package length")
 
+        (volt_host_raw, volt_device_raw, volt_dut_raw, flags) = struct.unpack("!HHHH", pkg)
+
         path = path_from_usb_dev(self._dev)
         state = {
-            "voltage_host": \
-                (pkg[0]<<8 | pkg[1]) * Mux.ADC_SCALE / Mux.ADC_RANGE,
-            "voltage_device": \
-                (pkg[2]<<8 | pkg[3]) * Mux.ADC_SCALE / Mux.ADC_RANGE,
-            "voltage_dut": \
-                (pkg[4]<<8 | pkg[5]) * Mux.ADC_SCALE / Mux.ADC_RANGE,
-            "dut_power_lockout": \
-                (pkg[6] & 1) != 0,
-            "dut_otg_output": \
-                (pkg[6] & 2) != 0,
-            "dut_otg_input": \
-                (pkg[7] & 128) != 0,
-            "power_links": \
-                Mux._LINKS[ (pkg[6]>>2)&0b111 ],
-            "data_links": \
-                Mux._LINKS[ (pkg[6]>>5)&0b111 ],
+            "voltage_host": volt_host_raw * self._ADC_SCALE / self._ADC_RANGE,
+            "voltage_device": volt_device_raw * self._ADC_SCALE / self._ADC_RANGE,
+            "voltage_dut": volt_dut_raw * self._ADC_SCALE / self._ADC_RANGE,
+            "dut_power_lockout": (flags & self._STATUS_FLAG_DUT_LOCK) != 0,
+            "dut_otg_output": (flags & self._STATUS_FLAG_OTG_OUT) != 0,
+            "dut_otg_input": (flags & self._STATUS_FLAG_OTG_IN) != 0,
+            "power_links": self._LINKS[(flags >> 10) & 0b111],
+            "data_links": self._LINKS[(flags >> 13) & 0b111],
             "device": {
                 "usb_path": path,
                 "serial_number": self._dev.serial_number,
@@ -219,11 +239,10 @@ class Mux():
         still succeed, but this link will not be set. The state returned
         will reflect this.
 
-        Return the bytefiled received by the USB-Mux.
-        This can be parsed using self._parse_return()
+        Return the parsed status received by the USB-Mux as a dict.
         """
         if 4 <= num <= 0:
-            raise Exception("{} is not a valid power connection id".format(num))
+            raise Exception(f"{num} is not a valid power connection id")
         data = self._send_cmd(self._SET_POWER, num)
         return self._parse_return(data)
 
@@ -236,11 +255,10 @@ class Mux():
         still succeed, but this link will not be set. The state returned
         will reflect this.
 
-        Return the bytefiled received by the USB-Mux.
-        This can be parsed using self._parse_return()
+        Return the parsed status received by the USB-Mux as a dict.
         """
         if 4 <= num <= 0:
-            raise Exception("{} is not a valid data connection id".format(num))
+            raise Exception(f"{num} is not a valid data connection id")
         data = self._send_cmd(self._SET_DATA, num)
         return self._parse_return(data)
 
@@ -249,31 +267,25 @@ class Mux():
         Sets the state of the ID pin on the DUT port.
 
         If state is True: Pulls ID pin low
-        If state if False: Leave ID pin floating, a 100k Pull Up is active
+        If state is False: Leave ID pin floating, a 100k Pull Up is active
 
-        Returns a dict with the state reported by the hardware.
+        Return the parsed status received by the USB-Mux as a dict.
         """
-        if state == True:
-            id_state = 1
-        elif state == False:
-            id_state = 0
-        else:
-            raise Exception("{} is not a valid data for otg_id".format(state))
-        data = self._send_cmd(self._SET_OTG, id_state)
+        data = self._send_cmd(self._SET_OTG, int(state))
         return self._parse_return(data)
 
     def get_status(self):
         """
         Queries the state of the USB-Mux.
 
-        Returns a dict with the state reported by the hardware.
+        Return the parsed status received by the USB-Mux as a dict.
         """
         data = self._send_cmd(self._GET_STATUS)
         return self._parse_return(data)
 
     def enter_dfu(self):
         """
-        Disconnects all Links and resets the CPU into the DFU-Mude.
+        Disconnects all Links and resets the CPU into the DFU-Mode.
         DFU-Mode is provided by the ROM Code.
         This mode is used to transfer firmware onto the device.
 
@@ -289,7 +301,7 @@ class Mux():
         except usb.core.USBError:
             pass
 
-    def connect(self, links, id_pull_low = None):
+    def connect(self, links, id_pull_low=None):
         """
         Applies a connection between ports of the USB-Mux.
 
@@ -316,25 +328,25 @@ class Mux():
             if value == links:
                 num = key
         if num is None:
-            raise Exception("Invalid connection {}".format(links))
+            raise Exception(f"Invalid connection {links}")
 
         self._connect_power(0)
         self._connect_data(0)
-        if not id_pull_low == None:
+        if id_pull_low is not None:
             self.pull_otg_id_low(False)
 
-        sleep(0.5) # Gives switches time to settle and devices to power off
+        sleep(0.5)  # Gives switches time to settle and devices to power off
 
         self._connect_power(num)
         self._connect_data(num)
-        if not id_pull_low == None:
+        if id_pull_low is not None:
             self.pull_otg_id_low(id_pull_low)
 
-        sleep(0.3) # Wait a little moment for switches to settle
+        sleep(0.3)  # Wait a little moment for switches to settle
 
     def __str__(self):
-        path = path_from_usb_dev(dev)
-        path = "Connected to:\n- ID:   {}\n- Path: {}\n- Name: {}".format(self._dev.serial_number, path, self._dev.product)
+        path = path_from_usb_dev(self._dev)
+        path = f"Connected to:\n- ID:   {self._dev.serial_number}\n- Path: {path}\n- Name: {self._dev.product}"
         return path
 
     def is_software_up_to_date(self):
