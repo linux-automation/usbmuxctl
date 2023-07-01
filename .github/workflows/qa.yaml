@@ -1,0 +1,11 @@
+name: Quality Assurance
+
+on: [push, pull_request]
+
+jobs:
+  ruff:
+    name: Python Format and Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: make qa-ruff
