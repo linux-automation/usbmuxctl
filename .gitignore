@@ -12,3 +12,4 @@ env/
 venv/
 envs/
 dist/
+.idea
