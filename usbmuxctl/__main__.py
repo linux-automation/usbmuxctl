@@ -35,9 +35,7 @@ class ConnectionNotPossible(Exception):
 
 
 artwork = {}
-artwork[
-    "DUT-Host Device-Host"
-] = """                                     +-----------------------+
+artwork["DUT-Host Device-Host"] = """                                     +-----------------------+
                                      | USB-Mux               |
                                   +--|                       |
                                   |  | SN:   {:11s}     |
@@ -51,9 +49,7 @@ Host |>--------------|       1 |--+         ID: {}
                      |       3 |---------------------|> Device
                      +---------+           VCC: {:1.2f}V"""
 
-artwork[
-    "None"
-] = """                                     +-----------------------+
+artwork["None"] = """                                     +-----------------------+
                                      | USB-Mux               |
                                   +--|                       |
                                   |  | SN:   {:11s}     |
@@ -67,9 +63,7 @@ Host |>--------------|       1 |--+         ID: {}
                      |       3 |----x    ------------|> Device
                      +---------+           VCC: {:1.2f}V"""
 
-artwork[
-    "DUT-Host"
-] = """                                     +-----------------------+
+artwork["DUT-Host"] = """                                     +-----------------------+
                                      | USB-Mux               |
                                   +--|                       |
                                   |  | SN:   {:11s}     |
@@ -83,9 +77,7 @@ Host |>--------------|       1 |--+         ID: {}
                      |       3 |----x    ------------|> Device
                      +---------+           VCC: {:1.2f}V"""
 
-artwork[
-    "Device-Host"
-] = """                                     +-----------------------+
+artwork["Device-Host"] = """                                     +-----------------------+
                                      | USB-Mux               |
                                   +--|                       |
                                   |  | SN:   {:11s}     |
@@ -99,9 +91,7 @@ Host |>--------------|       1 |--+         ID: {}
                      |       3 |---------------------|> Device
                      +---------+           VCC: {:1.2f}V"""
 
-artwork[
-    "DUT-Device"
-] = """                                     +-----------------------+
+artwork["DUT-Device"] = """                                     +-----------------------+
                                      | USB-Mux               |
                                   +--|                       |
                                   |  | SN:   {:11s}     |
@@ -392,9 +382,9 @@ def software_update(args):
             result["errormessage"] = "Failed to connect to device: Failed to find the defined USB-Mux"
         except DfuUtilNotFoundError:
             result["error"] = True
-            result[
-                "errormessage"
-            ] = "Could not find tool 'dfu-util'. Please install using your package manager and re-run this command."
+            result["errormessage"] = (
+                "Could not find tool 'dfu-util'. Please install using your package manager and re-run this command."
+            )
         except DfuUtilFailedError as e:
             result["error"] = True
             result["errormessage"] = f"'dfu-util' failed: '{e}'. Please check the log above for hints how to fix this."
