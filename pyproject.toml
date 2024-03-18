@@ -1,7 +1,44 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "usbmuxctl"
+description = "Tool to control an USB-Mux from the command line"
+version = "0.1.3"
+authors = [
+  { name = "Chris Fiege", email = "python@pengutronix.de" },
+]
+readme = "README.rst"
+license = { "text" = "LGPL-2.1-or-later" }
+dependencies = [
+  "pyusb",
+  "termcolor"
+]
+classifiers = [
+    "Environment :: Console",
+    "Natural Language :: English",
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 3 :: Only"
+]
+
+[project.urls]
+homepage="https://github.com/linux-automation/usbmuxctl"
+documentation="https://linux-automation.com/umx-M01/"
+
+[project.scripts]
+usbmuxctl = "usbmuxctl.__main__:main"
+
+[tool.setuptools]
+packages = [
+  "usbmuxctl",
+  "usbmuxctl.firmware"
+]
+include-package-data = true
+
 [tool.ruff]
 line-length = 119
 exclude = [
-  "fastentrypoints.py",
   "__pycache__",
   "usbmuxctl.egg-info",
   ".pybuild",
@@ -9,7 +46,6 @@ exclude = [
   "debian",
   "env",
   "venv",
-  "setup.py",
   "envs",
   "dist",
 ]
