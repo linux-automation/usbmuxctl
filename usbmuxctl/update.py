@@ -359,8 +359,8 @@ def dfu_util_version():
         dfu_version, *_ = output.split("\n")
 
         return dfu_version
-    except FileNotFoundError:
-        raise DfuUtilNotFoundError("dfu-util not found. Might not be installed.")
+    except FileNotFoundError as e:
+        raise DfuUtilNotFoundError("dfu-util not found. Might not be installed.") from e
 
 
 def dfu_util_flash_firmware(firmware_path, usb_path):
@@ -371,15 +371,15 @@ def dfu_util_flash_firmware(firmware_path, usb_path):
     firmware_path -- Path to the firmware file as string
     usb_path      -- USB path to USB device (example: 1-2.2.1)
 
-    Throws an Exception if dfu-util is not installed oder dfu-util failed"""
+    Throws an Exception if dfu-util is not installed or dfu-util failed"""
     try:
         res = subprocess.run(
             [DFU_UTIL_CMD, "-d", "0483:df11", "-a", "0", "-D", firmware_path, "-s", "0x8000000", "--path", usb_path]
         )
         if res.returncode != 0:
             raise DfuUtilFailedError(f"dfu-util failed with: {res}")
-    except FileNotFoundError:
-        raise DfuUtilNotFoundError("dfu-util not found. Might not be installed.")
+    except FileNotFoundError as e:
+        raise DfuUtilNotFoundError("dfu-util not found. Might not be installed.") from e
 
 
 def dfu_util_flash_config(file_path, usb_path):
@@ -390,15 +390,15 @@ def dfu_util_flash_config(file_path, usb_path):
     firmware_path -- Path to the config file as string
     usb_path      -- USB path to USB device (example: 1-2.2.1)
 
-    Throws an Exception if dfu-util is not installed oder dfu-util failed"""
+    Throws an Exception if dfu-util is not installed or dfu-util failed"""
     try:
         res = subprocess.run(
             [DFU_UTIL_CMD, "-d", "0483:df11", "-a", "0", "-D", file_path, "-s", "0x8007c00", "--path", usb_path]
         )
         if res.returncode != 0:
             raise Exception(f"dfu-util failed with: {res}")
-    except FileNotFoundError:
-        raise Exception("dfu-util not found. Might not be installed.")
+    except FileNotFoundError as e:
+        raise Exception("dfu-util not found. Might not be installed.") from e
 
 
 def _find_dfu_device(search_path):

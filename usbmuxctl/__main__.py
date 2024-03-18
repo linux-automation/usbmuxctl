@@ -176,10 +176,7 @@ def list_usb(args):
         for d in Mux.find_devices():
             mux = Mux(path=d["path"])
             status = mux.get_status()
-            if status["data_links"] == "":
-                connections = "None"
-            else:
-                connections = status["data_links"]
+            connections = status["data_links"] if status["data_links"] != "" else "None"
             lock = "locked" if status["dut_power_lockout"] else "unlocked"
 
             messages = _ui_messages(status)
