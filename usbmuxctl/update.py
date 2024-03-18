@@ -201,7 +201,7 @@ class DFU:
 
     def _check_status(self):
         """Wrapper for _get_status.
-        Returns the device status and thows DFUException if bStatus is not OK"""
+        Returns the device status and throws DFUException if bStatus is not OK"""
 
         status = self._get_status()
         if status["bStatus"] != _bStatus.OK:
@@ -226,7 +226,7 @@ class DFU:
     def _set_address(self, address):
         """DFU internal command
         Set the address to read, write, execute"""
-        self.log.debug("Set Adress: %x", address)
+        self.log.debug("Set Address: %x", address)
         self._cmd_out(_DfuCommand.DFU_DNLOAD, 0, struct.pack("<BI", 0x21, address))
         self._check_status()
 
@@ -238,12 +238,12 @@ class DFU:
 
         ret = self._cmd_in(_DfuCommand.DFU_UPLOAD, 2, length)
 
-        self.log.debug("Data receving: %s", "".join(f"{i:02X}" for i in ret))
+        self.log.debug("Data receiving: %s", "".join(f"{i:02X}" for i in ret))
         return ret, self._check_status()
 
     def _get_cmd(self):
         """DFU internal command
-        Requests a list of supportet commands from the DFU device"""
+        Requests a list of supported commands from the DFU device"""
         raise NotImplementedError()
 
     def _write_mem(self):
@@ -267,7 +267,7 @@ class DFU:
         status = self._check_status()
 
         if status["bState"] != _bState.dfuMANIFEST:
-            self.log.error("Leave dfu command faild")
+            self.log.error("Leave dfu command failed")
             raise DFUException(status)
 
     def read_at_addr_len(self, addr, length):
@@ -500,7 +500,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--serial",
         "-s",
-        help="USBMux serial numer (00001.00020)",
+        help="USBMux serial number (00001.00020)",
     )
     parser.add_argument(
         "-v",

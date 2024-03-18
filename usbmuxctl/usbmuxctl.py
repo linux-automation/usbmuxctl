@@ -75,7 +75,7 @@ class Mux:
             "PRODUCTID": 0x0001,
         },
         {
-            # This is a _fake_ Vendor-ID and Product-ID that we have choosen by throwing dice during
+            # This is a _fake_ Vendor-ID and Product-ID that we have chosen by throwing dice during
             # development. This ID is only for the transition phase. There should be no USB-Muxes
             # in the wild using this ID!
             "VENDORID": 0x5824,

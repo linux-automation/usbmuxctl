@@ -389,7 +389,7 @@ def software_update(args):
             if err.errno == errno.EACCES:
                 result["error"] = True
                 result["errormessage"] = (
-                    "'dfu-util' failed. This probably happend because of "
+                    "'dfu-util' failed. This probably happened because of "
                     + f"insufficient permissions: {err} "
                     + "Disconnect and reconnect the USB-Mux."
                 )
