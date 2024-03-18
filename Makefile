@@ -38,12 +38,20 @@ $(PYTHON_TESTING_ENV)/.created:
 	$(PYTHON) -m venv $(PYTHON_TESTING_ENV) && \
 	. $(PYTHON_TESTING_ENV)/bin/activate && \
 	python3 -m pip install pip --upgrade && \
-	python3 -m pip install ruff && \
+	python3 -m pip install ruff codespell && \
 	date > $(PYTHON_TESTING_ENV)/.created
 
-.PHONY: qa qa-ruff qa-ruff-fix
+.PHONY: qa qa-codespell qa-codespell-fix qa-ruff qa-ruff-fix
 
-qa: qa-ruff
+qa: qa-codespell qa-ruff
+
+qa-codespell: $(PYTHON_TESTING_ENV)/.created
+	. $(PYTHON_TESTING_ENV)/bin/activate && \
+	codespell
+
+qa-codespell-fix: $(PYTHON_TESTING_ENV)/.created
+	. $(PYTHON_TESTING_ENV)/bin/activate && \
+	codespell -w
 
 qa-ruff: $(PYTHON_TESTING_ENV)/.created
 	. $(PYTHON_TESTING_ENV)/bin/activate && \
