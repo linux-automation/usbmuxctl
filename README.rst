@@ -233,15 +233,16 @@ Thank you for considering a contribution to this project!
 Changes should be submitted via a
 `Github pull request <https://github.com/linux-automation/usbmuxctl/pulls>`_.
 
-We use the `black <https://black.readthedocs.io/en/stable/>`_ code formatter,
-please run `black` when contributing changes:
+We use the `ruff <https://docs.astral.sh/ruff/>`_ code formatter and linter,
+please run `ruff format` and `ruff check` when contributing changes:
 
 .. code-block:: bash
 
-    $ python3 -m pip install black
-    $ black *.py usbmuxctl/
-    All done! ✨ 🍰 ✨
-    8 files left unchanged.
+    $ python3 -m pip install ruff
+    $ ruff format
+    6 files left unchanged
+    $ ruff check
+    All checks passed!
 
 This project uses the `Developer's Certificate of Origin 1.1
 <https://developercertificate.org/>`_ with the same `process
