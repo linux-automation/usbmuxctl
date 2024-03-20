@@ -201,7 +201,7 @@ class DFU:
 
     def _check_status(self):
         """Wrapper for _get_status.
-        Returns the device status and thows DFUException if bStatus is not OK"""
+        Returns the device status and throws DFUException if bStatus is not OK"""
 
         status = self._get_status()
         if status["bStatus"] != _bStatus.OK:
@@ -226,7 +226,7 @@ class DFU:
     def _set_address(self, address):
         """DFU internal command
         Set the address to read, write, execute"""
-        self.log.debug("Set Adress: %x", address)
+        self.log.debug("Set Address: %x", address)
         self._cmd_out(_DfuCommand.DFU_DNLOAD, 0, struct.pack("<BI", 0x21, address))
         self._check_status()
 
@@ -238,12 +238,12 @@ class DFU:
 
         ret = self._cmd_in(_DfuCommand.DFU_UPLOAD, 2, length)
 
-        self.log.debug("Data receving: %s", "".join(f"{i:02X}" for i in ret))
+        self.log.debug("Data receiving: %s", "".join(f"{i:02X}" for i in ret))
         return ret, self._check_status()
 
     def _get_cmd(self):
         """DFU internal command
-        Requests a list of supportet commands from the DFU device"""
+        Requests a list of supported commands from the DFU device"""
         raise NotImplementedError()
 
     def _write_mem(self):
@@ -267,7 +267,7 @@ class DFU:
         status = self._check_status()
 
         if status["bState"] != _bState.dfuMANIFEST:
-            self.log.error("Leave dfu command faild")
+            self.log.error("Leave dfu command failed")
             raise DFUException(status)
 
     def read_at_addr_len(self, addr, length):
@@ -359,8 +359,8 @@ def dfu_util_version():
         dfu_version, *_ = output.split("\n")
 
         return dfu_version
-    except FileNotFoundError:
-        raise DfuUtilNotFoundError("dfu-util not found. Might not be installed.")
+    except FileNotFoundError as e:
+        raise DfuUtilNotFoundError("dfu-util not found. Might not be installed.") from e
 
 
 def dfu_util_flash_firmware(firmware_path, usb_path):
@@ -371,15 +371,15 @@ def dfu_util_flash_firmware(firmware_path, usb_path):
     firmware_path -- Path to the firmware file as string
     usb_path      -- USB path to USB device (example: 1-2.2.1)
 
-    Throws an Exception if dfu-util is not installed oder dfu-util failed"""
+    Throws an Exception if dfu-util is not installed or dfu-util failed"""
     try:
         res = subprocess.run(
             [DFU_UTIL_CMD, "-d", "0483:df11", "-a", "0", "-D", firmware_path, "-s", "0x8000000", "--path", usb_path]
         )
         if res.returncode != 0:
             raise DfuUtilFailedError(f"dfu-util failed with: {res}")
-    except FileNotFoundError:
-        raise DfuUtilNotFoundError("dfu-util not found. Might not be installed.")
+    except FileNotFoundError as e:
+        raise DfuUtilNotFoundError("dfu-util not found. Might not be installed.") from e
 
 
 def dfu_util_flash_config(file_path, usb_path):
@@ -390,15 +390,15 @@ def dfu_util_flash_config(file_path, usb_path):
     firmware_path -- Path to the config file as string
     usb_path      -- USB path to USB device (example: 1-2.2.1)
 
-    Throws an Exception if dfu-util is not installed oder dfu-util failed"""
+    Throws an Exception if dfu-util is not installed or dfu-util failed"""
     try:
         res = subprocess.run(
             [DFU_UTIL_CMD, "-d", "0483:df11", "-a", "0", "-D", file_path, "-s", "0x8007c00", "--path", usb_path]
         )
         if res.returncode != 0:
             raise Exception(f"dfu-util failed with: {res}")
-    except FileNotFoundError:
-        raise Exception("dfu-util not found. Might not be installed.")
+    except FileNotFoundError as e:
+        raise Exception("dfu-util not found. Might not be installed.") from e
 
 
 def _find_dfu_device(search_path):
@@ -500,7 +500,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--serial",
         "-s",
-        help="USBMux serial numer (00001.00020)",
+        help="USBMux serial number (00001.00020)",
     )
     parser.add_argument(
         "-v",

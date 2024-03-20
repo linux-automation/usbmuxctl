@@ -1,3 +1,18 @@
-[tool.black]
+[tool.ruff]
 line-length = 119
+exclude = [
+  "fastentrypoints.py",
+  "__pycache__",
+  "usbmuxctl.egg-info",
+  ".pybuild",
+  "build",
+  "debian",
+  "env",
+  "venv",
+  "setup.py",
+  "envs",
+  "dist",
+]
 
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "SIM"]

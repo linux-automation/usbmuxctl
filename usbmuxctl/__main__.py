@@ -35,9 +35,7 @@ class ConnectionNotPossible(Exception):
 
 
 artwork = {}
-artwork[
-    "DUT-Host Device-Host"
-] = """                                     +-----------------------+
+artwork["DUT-Host Device-Host"] = """                                     +-----------------------+
                                      | USB-Mux               |
                                   +--|                       |
                                   |  | SN:   {:11s}     |
@@ -51,9 +49,7 @@ Host |>--------------|       1 |--+         ID: {}
                      |       3 |---------------------|> Device
                      +---------+           VCC: {:1.2f}V"""
 
-artwork[
-    "None"
-] = """                                     +-----------------------+
+artwork["None"] = """                                     +-----------------------+
                                      | USB-Mux               |
                                   +--|                       |
                                   |  | SN:   {:11s}     |
@@ -67,9 +63,7 @@ Host |>--------------|       1 |--+         ID: {}
                      |       3 |----x    ------------|> Device
                      +---------+           VCC: {:1.2f}V"""
 
-artwork[
-    "DUT-Host"
-] = """                                     +-----------------------+
+artwork["DUT-Host"] = """                                     +-----------------------+
                                      | USB-Mux               |
                                   +--|                       |
                                   |  | SN:   {:11s}     |
@@ -83,9 +77,7 @@ Host |>--------------|       1 |--+         ID: {}
                      |       3 |----x    ------------|> Device
                      +---------+           VCC: {:1.2f}V"""
 
-artwork[
-    "Device-Host"
-] = """                                     +-----------------------+
+artwork["Device-Host"] = """                                     +-----------------------+
                                      | USB-Mux               |
                                   +--|                       |
                                   |  | SN:   {:11s}     |
@@ -99,9 +91,7 @@ Host |>--------------|       1 |--+         ID: {}
                      |       3 |---------------------|> Device
                      +---------+           VCC: {:1.2f}V"""
 
-artwork[
-    "DUT-Device"
-] = """                                     +-----------------------+
+artwork["DUT-Device"] = """                                     +-----------------------+
                                      | USB-Mux               |
                                   +--|                       |
                                   |  | SN:   {:11s}     |
@@ -186,10 +176,7 @@ def list_usb(args):
         for d in Mux.find_devices():
             mux = Mux(path=d["path"])
             status = mux.get_status()
-            if status["data_links"] == "":
-                connections = "None"
-            else:
-                connections = status["data_links"]
+            connections = status["data_links"] if status["data_links"] != "" else "None"
             lock = "locked" if status["dut_power_lockout"] else "unlocked"
 
             messages = _ui_messages(status)
@@ -392,9 +379,9 @@ def software_update(args):
             result["errormessage"] = "Failed to connect to device: Failed to find the defined USB-Mux"
         except DfuUtilNotFoundError:
             result["error"] = True
-            result[
-                "errormessage"
-            ] = "Could not find tool 'dfu-util'. Please install using your package manager and re-run this command."
+            result["errormessage"] = (
+                "Could not find tool 'dfu-util'. Please install using your package manager and re-run this command."
+            )
         except DfuUtilFailedError as e:
             result["error"] = True
             result["errormessage"] = f"'dfu-util' failed: '{e}'. Please check the log above for hints how to fix this."
@@ -402,7 +389,7 @@ def software_update(args):
             if err.errno == errno.EACCES:
                 result["error"] = True
                 result["errormessage"] = (
-                    "'dfu-util' failed. This probably happend because of "
+                    "'dfu-util' failed. This probably happened because of "
                     + f"insufficient permissions: {err} "
                     + "Disconnect and reconnect the USB-Mux."
                 )

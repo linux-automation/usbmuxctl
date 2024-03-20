@@ -18,6 +18,7 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
+import contextlib
 import errno
 import struct
 from sys import stderr
@@ -74,7 +75,7 @@ class Mux:
             "PRODUCTID": 0x0001,
         },
         {
-            # This is a _fake_ Vendor-ID and Product-ID that we have choosen by throwing dice during
+            # This is a _fake_ Vendor-ID and Product-ID that we have chosen by throwing dice during
             # development. This ID is only for the transition phase. There should be no USB-Muxes
             # in the wild using this ID!
             "VENDORID": 0x5824,
@@ -177,8 +178,8 @@ class Mux:
                 raise ProtocolVersionMismatch(
                     "The protocol version reported by the USB-Mux is not supported by this control tool."
                 )
-        except ValueError:
-            raise NoPrivileges("Could not communicate with USB-device. Check privileges, maybe add udev-rule")
+        except ValueError as e:
+            raise NoPrivileges("Could not communicate with USB-device. Check privileges, maybe add udev-rule") from e
 
         # read sw version
         self.sw_version = str(self._send_cmd(self._SW_VERSION), "utf-8")
@@ -296,10 +297,8 @@ class Mux:
         self._connect_data(0)
 
         sleep(0.1)
-        try:
+        with contextlib.suppress(usb.core.USBError):
             self._send_cmd(self._DFU)
-        except usb.core.USBError:
-            pass
 
     def connect(self, links, id_pull_low=None):
         """
@@ -350,7 +349,7 @@ class Mux:
         return path
 
     def is_software_up_to_date(self):
-        return version.FIRMWARE_VERSION <= self.sw_version_num
+        return self.sw_version_num >= version.FIRMWARE_VERSION
 
     def update_software(self):
         """Updates the usbmux software"""

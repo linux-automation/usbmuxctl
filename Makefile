@@ -1,7 +1,7 @@
 PYTHON=python3
-
 PYTHON_ENV_ROOT=envs
 PYTHON_PACKAGING_VENV=$(PYTHON_ENV_ROOT)/$(PYTHON)-packaging-env
+PYTHON_TESTING_ENV=$(PYTHON_ENV_ROOT)/$(PYTHON)-qa-env
 
 .PHONY: clean
 
@@ -30,3 +30,33 @@ clean:
 	rm -rf $(PYTHON_ENV_ROOT)
 
 envs: env packaging-env
+
+
+# testing #####################################################################
+$(PYTHON_TESTING_ENV)/.created:
+	rm -rf $(PYTHON_TESTING_ENV) && \
+	$(PYTHON) -m venv $(PYTHON_TESTING_ENV) && \
+	. $(PYTHON_TESTING_ENV)/bin/activate && \
+	python3 -m pip install pip --upgrade && \
+	python3 -m pip install ruff codespell && \
+	date > $(PYTHON_TESTING_ENV)/.created
+
+.PHONY: qa qa-codespell qa-codespell-fix qa-ruff qa-ruff-fix
+
+qa: qa-codespell qa-ruff
+
+qa-codespell: $(PYTHON_TESTING_ENV)/.created
+	. $(PYTHON_TESTING_ENV)/bin/activate && \
+	codespell
+
+qa-codespell-fix: $(PYTHON_TESTING_ENV)/.created
+	. $(PYTHON_TESTING_ENV)/bin/activate && \
+	codespell -w
+
+qa-ruff: $(PYTHON_TESTING_ENV)/.created
+	. $(PYTHON_TESTING_ENV)/bin/activate && \
+	ruff format --check --diff && ruff check
+
+qa-ruff-fix: $(PYTHON_TESTING_ENV)/.created
+	. $(PYTHON_TESTING_ENV)/bin/activate && \
+	ruff format && ruff check --fix
