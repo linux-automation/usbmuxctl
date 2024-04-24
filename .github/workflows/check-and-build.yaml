@@ -1,10 +1,24 @@
-name: Build
+name: Check and Build
 
 on: [push, pull_request]
 
 jobs:
+  codespell:
+    name: Codespell
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: make qa-codespell
+
+  ruff:
+    name: Python Format and Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: make qa-ruff
+
   build:
-    name: Source Distribution and Wheel
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
