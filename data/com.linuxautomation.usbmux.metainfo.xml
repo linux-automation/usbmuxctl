@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component>
+  <id>com.linuxautomation.usbmux</id>
+  <developer id="com.linuxautomation">
+    <name>Linux Automation GmbH</name>
+  </developer>
+  <metadata_license>CC0-1.0</metadata_license>
+  <name>usbmuxctl</name>
+  <summary>USB-Mux</summary>
+  <description>
+    <p>
+      The USB-Mux uses analog switches and power transistors to create
+      connections between its various ports. It allows workflows like connecting
+      your host to the device port to write data to a connected flash
+      drive before connecting the DUT to the device port to boot from said
+      drive. Or it allows you to connect your DUT to the host port to test the
+      DUT in its device role.
+    </p>
+  </description>
+  <provides>
+    <modalias>usb:v33f7p0001*</modalias>
+  </provides>
+</component>
