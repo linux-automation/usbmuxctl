@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+SPDX-FileCopyrightText: 2025 The USB-MUX-CTL Authors
+
+SPDX-License-Identifier: LGPL-2.1-or-later
+-->
+
 <component>
   <id>com.linuxautomation.usbmux</id>
   <developer id="com.linuxautomation">

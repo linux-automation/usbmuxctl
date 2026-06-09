@@ -1,2 +1,6 @@
 # Linux Automation GmbH USB-Mux
+
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# SPDX-FileCopyrightText: 2021 The USB-MUX-CTL Authors
+
 ATTRS{idVendor}=="33f7", ATTRS{idProduct}=="0001", TAG+="uaccess", GROUP="plugdev"
