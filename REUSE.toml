@@ -1,0 +1,22 @@
+version = 1
+
+# Firmware Binaries
+[[annotations]]
+path = [
+    "usbmuxctl/firmware/*.bin"
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2021 The USB-MUX-CTL Authors"
+SPDX-License-Identifier = "LGPL-2.1-or-later"
+
+# Debian Packaging
+[[annotations]]
+path = [
+    "debian/changelog",
+    "debian/compat",
+    "debian/control",
+    "debian/rules",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2024 The USB-MUX-CTL Authors"
+SPDX-License-Identifier = "LGPL-2.1-or-later"
