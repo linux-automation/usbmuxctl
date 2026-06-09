@@ -20,3 +20,26 @@ path = [
 precedence = "override"
 SPDX-FileCopyrightText = "2024 The USB-MUX-CTL Authors"
 SPDX-License-Identifier = "LGPL-2.1-or-later"
+
+# Config files etc.
+[[annotations]]
+path = [
+    ".codespellrc",
+    ".gitignore",
+    "MANIFEST.in",
+    "pyproject.toml",
+    "REUSE.toml",
+    ".github/workflows/check-and-publish.yaml",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2017 The USB-MUX-CTL Authors"
+SPDX-License-Identifier = "CC0-1.0"
+
+# The AUTHORS file itself
+[[annotations]]
+path = [
+    "AUTHORS",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 The USB-MUX-CTL Authors"
+SPDX-License-Identifier = "CC0-1.0"
