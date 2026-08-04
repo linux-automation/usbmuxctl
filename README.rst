@@ -1,3 +1,6 @@
+.. SPDX-License-Identifier: LGPL-2.1-or-later
+.. SPDX-FileCopyrightText: 2024 The USB-MUX-CTL Authors
+
 Welcome to usbmuxctl
 ====================
 
@@ -190,7 +193,7 @@ Limitations on Windows
 
 On Windows the following limitations apply:
 
-* Updating the firmware: this feature has not been tested successfully on Windows.
+* Updating the firmware: this feature has not been successfully tested on Windows.
   (In theory it should be possible to install  ``dfu-util`` and the drivers needed - but it has not yet been
   documented.)
 * Using the USB path to select an USB-Mux.
@@ -203,7 +206,7 @@ Installation of dependencies
 Install ``python3``.
 Make sure to add the Python binaries to your path during installation.
 
-Afterwards install the `Windows driver package <contrib/windows/libusb_USB-Mux_driver_installer.zip>`_:
+Afterwards install the `Windows driver package <https://linux-automation.com/en/products/usb-mux.html>`_:
 Download and extract the archive. Then run ``InstallDriver.exe``.
 
 Install from pypi
